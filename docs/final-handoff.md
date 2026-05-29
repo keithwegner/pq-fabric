@@ -99,7 +99,7 @@ The handoff archive excludes `.git`, generated validator data, raw tmp runtime s
 
 ## Tooling Assumptions
 
-- Go 1.23 or newer module behavior.
+- Go 1.25 or newer module behavior.
 - Docker and Docker Compose for local container checks when available.
 - Terraform and kubectl are optional validation tools.
 - Foundry is optional for Solidity tests.
