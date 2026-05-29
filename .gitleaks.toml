@@ -1,0 +1,10 @@
+title = "pq-fabric gitleaks config"
+
+[allowlist]
+description = "Deterministic ML-KEM shared-secret fixture values are public test vectors."
+paths = [
+  '''tests/crypto_vectors/mlkem768/encap_decap\.json''',
+]
+regexes = [
+  '''expected_shared_secret_hex''',
+]
