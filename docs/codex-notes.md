@@ -68,7 +68,7 @@ If the change touches a narrow package, also run its focused tests while iterati
 - Evidence API hardening uses scoped hashed API-key records. Do not commit real `api-keys*.json` files; only the disabled example template belongs in source.
 - Do not describe the contracts as audited or production smart-contract security.
 - Deployment path work lives under `Dockerfile`, `docker-compose.yml`, `config/`, `deployments/k8s`, `deployments/terraform`, `cmd/deployment-evidence`, and deployment docs. Keep it a safe local/prototype handoff path unless a future phase explicitly requests production hardening.
-- Do not run `terraform apply`, create cloud resources, push images to registries, use live RPC endpoints, expose public relay exits, or require real kubeconfigs/cloud credentials in local validation.
+- Do not run `terraform apply`, create cloud resources, use live RPC endpoints, expose public relay exits, or require real kubeconfigs/cloud credentials in local validation. Registry publishing is limited to the `release-artifacts` GitHub Actions workflow on `main` and `v*` tags.
 - Prefer `make compose-config`, `make k8s-validate`, `make terraform-validate`, and `make deployment-evidence` for validation. Optional tools should skip clearly when absent.
 - Keep real `.env`, `.tfvars`, kubeconfigs, wallet files, private keys, Terraform state, Foundry broadcast artifacts, generated data, and generated evidence out of source control.
 - Final handoff work lives in `internal/e2e`, `cmd/e2e-demo`, `cmd/e2e-evidence`, final docs, and packaging scripts. Do not add new protocol ambitions under the final handoff layer.

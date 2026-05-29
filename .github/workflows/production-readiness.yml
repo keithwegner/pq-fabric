@@ -52,6 +52,7 @@ jobs:
       - run: make pilot-bootstrap-check
       - run: make pilot-backup-check
       - run: make release-provenance-check
+      - run: make release-artifacts-check
       - run: make pilot-deploy-check
       - run: make deployment-evidence
       - run: make e2e-evidence

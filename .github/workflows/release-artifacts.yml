@@ -1,0 +1,210 @@
+name: release-artifacts
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-artifacts-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: keithwegner/pq-fabric
+  SYFT_VERSION: v1.44.0
+
+jobs:
+  build-scan-sign-attest:
+    name: build, scan, sign, and attest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: docker/setup-qemu-action@v4.1.0
+
+      - uses: docker/setup-buildx-action@v4.1.0
+
+      - uses: sigstore/cosign-installer@v4.1.2
+
+      - name: Install syft
+        run: |
+          set -euo pipefail
+          curl -sSfL "https://raw.githubusercontent.com/anchore/syft/${SYFT_VERSION}/install.sh" \
+            | sudo sh -s -- -b /usr/local/bin "${SYFT_VERSION}"
+          syft version
+
+      - name: Compute image metadata
+        id: image
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="${REGISTRY}/${IMAGE_NAME}"
+          short_sha="${GITHUB_SHA::12}"
+          publish="false"
+          tags="${image}:sha-${short_sha}"
+
+          if [[ "${GITHUB_REF}" == "refs/heads/main" && "${GITHUB_EVENT_NAME}" != "pull_request" ]]; then
+            publish="true"
+            tags="${tags}"$'\n'"${image}:main"
+          fi
+
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            publish="true"
+            tags="${tags}"$'\n'"${image}:${GITHUB_REF_NAME}"
+          fi
+
+          {
+            echo "image=${image}"
+            echo "short_sha=${short_sha}"
+            echo "publish=${publish}"
+            echo "tags<<EOF"
+            printf '%s\n' "${tags}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Log in to GHCR
+        if: steps.image.outputs.publish == 'true'
+        uses: docker/login-action@v4.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate source SBOM
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          syft packages dir:. -o spdx-json=tmp/sbom.spdx.json
+
+      - name: Build local scan image
+        uses: docker/build-push-action@v7.2.0
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: pq-fabric:ci-scan
+
+      - name: Scan local image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: pq-fabric:ci-scan
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+          output: tmp/trivy-image.txt
+
+      - name: Build release image
+        id: build
+        uses: docker/build-push-action@v7.2.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ steps.image.outputs.publish == 'true' }}
+          tags: ${{ steps.image.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          provenance: true
+          sbom: true
+
+      - name: Record image digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          if [[ -n "${{ steps.build.outputs.digest }}" ]]; then
+            printf '%s@%s\n' "${{ steps.image.outputs.image }}" "${{ steps.build.outputs.digest }}" > tmp/image-digest.txt
+          else
+            printf 'skipped: image was built without a pushed registry digest\n' > tmp/image-digest.txt
+          fi
+
+      - name: Sign image
+        if: steps.image.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          image_ref="${{ steps.image.outputs.image }}@${{ steps.build.outputs.digest }}"
+          cosign sign --yes "${image_ref}"
+
+      - name: Attest build provenance
+        if: steps.image.outputs.publish == 'true'
+        uses: actions/attest-build-provenance@v4.1.0
+        with:
+          subject-name: ${{ steps.image.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Verify image signature
+        if: steps.image.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          image_ref="${{ steps.image.outputs.image }}@${{ steps.build.outputs.digest }}"
+          cosign verify \
+            --certificate-identity-regexp "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release-artifacts.yml@refs/(heads/main|tags/v.*)" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${image_ref}" | tee tmp/cosign-verify.txt
+
+      - name: Generate release provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode="local"
+          image_ref="pq-fabric:ci-scan"
+          cosign_verify="false"
+          if [[ "${{ steps.image.outputs.publish }}" == "true" ]]; then
+            mode="published"
+            image_ref="${{ steps.image.outputs.image }}@${{ steps.build.outputs.digest }}"
+            cosign_verify="true"
+          fi
+          PQFABRIC_RELEASE_MODE="${mode}" \
+            PQFABRIC_IMAGE_REF="${image_ref}" \
+            PQFABRIC_SBOM_OUT="tmp/sbom.spdx.json" \
+            PQFABRIC_COSIGN_VERIFY="${cosign_verify}" \
+            ./scripts/release-provenance.sh
+
+      - name: Validate release provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ steps.image.outputs.publish }}" == "true" ]]; then
+            grep -Eq '"status": "pass"' tmp/release-provenance.json
+          else
+            grep -Eq '"status": "(pass|pass_with_skips)"' tmp/release-provenance.json
+          fi
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: release-artifacts
+          if-no-files-found: warn
+          retention-days: 30
+          path: |
+            tmp/release-provenance.json
+            tmp/release-provenance.txt
+            tmp/sbom.spdx.json
+            tmp/image-digest.txt
+            tmp/cosign-verify.txt
+            tmp/trivy-image.txt

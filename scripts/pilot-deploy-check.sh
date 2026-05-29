@@ -99,7 +99,9 @@ rg -q '"schema_version": "pq-fabric.release-provenance.v1"' tmp/release-provenan
 rg -q '"status": "pass|pass_with_skips"' tmp/release-provenance.json
 rg -q '"go_module_inventory"' tmp/release-provenance.json
 rg -q '"image_reference"' tmp/release-provenance.json
+rg -q '"image_digest_file"' tmp/release-provenance.json
 rg -q '"sbom_status"' tmp/release-provenance.json
 rg -q '"cosign_status"' tmp/release-provenance.json
+rg -q '"cosign_verify_file"' tmp/release-provenance.json
 
 echo "pilot-deploy-check: pass"

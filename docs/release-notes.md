@@ -25,6 +25,7 @@ Date: 2026-05-22
 - SQLite backup and upgrade safety with schema migration version tracking, `pqfabric migrate-sqlite`, `pqfabric backup`, `pqfabric restore-check`, checksum/integrity reports, and receipt spot-check verification.
 - Release provenance evidence with schema-versioned JSON output, Go module inventory, image reference/digest status, optional SBOM generation, optional cosign verification, and explicit skipped statuses for unavailable tools.
 - GitHub Actions CI/CD gates for Go tests/vet, focused race tests, Foundry contracts, production-readiness evidence, CodeQL, gitleaks, Trivy, scheduled drift checks, and manual dispatch.
+- Signed release-artifact workflow for multi-architecture GHCR images, image scanning, SBOM/provenance evidence, keyless cosign signing, build attestations, and digest-pinned deployment placeholders.
 
 ## Validation Performed
 
@@ -55,10 +56,12 @@ Optional checks skip clearly when local tools are unavailable.
 - `tmp/pilot-backup-restore-report.json`
 - `tmp/sqlite-restore-check.json`
 - `tmp/release-provenance.json`
+- `tmp/image-digest.txt`
+- `tmp/cosign-verify.txt`
 - `tmp/go-modules.txt`
 - `tmp/sbom.spdx.json` when `syft` is installed
 - `tmp/e2e-evidence.json`
-- GitHub Actions artifacts from `production-readiness`
+- GitHub Actions artifacts from `production-readiness` and `release-artifacts`
 
 ## Known Limitations
 
@@ -71,7 +74,7 @@ Optional checks skip clearly when local tools are unavailable.
 - No live Polygon deployment.
 - No cloud deployment.
 - No smart-contract audit.
-- Evidence fabric now includes peer mTLS enforcement for internal validator endpoints, manifest-history receipt verification, a SQLite transactional storage backend with schema version checks, a cloud-kms remote signer adapter, operator observability/reporting, controlled deployment readiness checks, backup/restore reporting, provider-neutral External Secrets evidence, release provenance evidence, and a provider-neutral pilot bootstrap smoke. It does not yet include native HSM signing, live Polygon testnet transactions, centralized audit shipping, managed dashboards, live alert delivery, provider-specific secret-manager API calls, cloud deployment, image signing, managed backups, or release attestation.
+- Evidence fabric now includes peer mTLS enforcement for internal validator endpoints, manifest-history receipt verification, a SQLite transactional storage backend with schema version checks, a cloud-kms remote signer adapter, operator observability/reporting, controlled deployment readiness checks, backup/restore reporting, provider-neutral External Secrets evidence, signed release provenance evidence, and a provider-neutral pilot bootstrap smoke. It does not yet include native HSM signing, live Polygon testnet transactions, centralized audit shipping, managed dashboards, live alert delivery, provider-specific secret-manager API calls, cloud deployment, managed backups, or release promotion automation.
 
 ## Non-Claims
 

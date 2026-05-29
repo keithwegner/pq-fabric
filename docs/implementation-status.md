@@ -43,7 +43,7 @@ This document records the current prototype status for future implementation pha
 - Polygon contracts have Foundry tests checked in, but local contract execution depends on Foundry being installed. `make contract-tests` skips clearly when `forge` is absent.
 - Deployment artifacts are scaffolding. Compose is local-only, Kubernetes manifests include staging and production-pilot readiness overlays with Secret references and hardened pod settings, and Terraform has no provider resources or remote backend. The deployment path does not deploy to cloud, Kubernetes, Polygon, or public networks.
 - Integrated e2e evidence reuses deterministic local harnesses and subprocess-safe validation checks. It is not process-level production integration and does not exercise public infrastructure.
-- The evidence fabric API is a regulated-pilot foundation. It does not implement native HSM signing, live testnet anchoring, centralized audit shipping, managed dashboards/SIEM delivery, production governance automation, provider-specific secret-manager API calls, cloud deployment, image signing, or certification.
+- The evidence fabric API is a regulated-pilot foundation. It does not implement native HSM signing, live testnet anchoring, centralized audit shipping, managed dashboards/SIEM delivery, production governance automation, provider-specific secret-manager API calls, cloud deployment, release promotion automation, or certification.
 
 ## Crypto status
 
@@ -79,14 +79,14 @@ This document records the current prototype status for future implementation pha
 
 ## Deployment status
 
-- Implemented: multi-command Dockerfile, local `pq-fabric:local` image target, bundled `pqfabric` CLI, Docker Compose config with seven validators, seven relay services under the `relays` profile, durable validator data directories, localhost-bound validator ports, internal Compose network, local demo/evidence service profiles, safe config templates under `config/`, Kubernetes manifests under `deployments/k8s`, staging and production-pilot overlays, provider-neutral secret contract under `deployments/secrets`, External Secrets store-ref contract example, redacted bootstrap secret evidence, pilot bootstrap validator/smoke command, SQLite migration/backup/restore-check commands, Terraform planning scaffold under `deployments/terraform`, deployment evidence artifacts, local deployment smoke script, SQLite restore check, release provenance evidence, and runbooks.
-- Implemented Make targets: `image`, `compose-config`, `compose-up`, `compose-down`, `compose-logs`, `compose-clean`, `deploy-local`, `deploy-local-smoke`, `deployment-check`, `k8s-validate`, `terraform-validate`, `deployment-evidence`, `pilot-bootstrap-check`, `pilot-backup-check`, `pilot-deploy-check`, `sqlite-restore-check`, `release-provenance`, `release-provenance-check`, and `package-handoff`.
-- Not implemented: cloud resource creation, Kubernetes cluster deployment, Terraform apply, live Polygon deployment, live RPC dependency, provider-specific secret-manager API calls, managed observability deployment, image signing, registry publishing, or release attestation.
+- Implemented: multi-command Dockerfile, local `pq-fabric:local` image target, bundled `pqfabric` CLI, Docker Compose config with seven validators, seven relay services under the `relays` profile, durable validator data directories, localhost-bound validator ports, internal Compose network, local demo/evidence service profiles, safe config templates under `config`, Kubernetes manifests under `deployments/k8s`, staging and production-pilot overlays with digest-pinned GHCR placeholders, provider-neutral secret contract under `deployments/secrets`, External Secrets store-ref contract example, redacted bootstrap secret evidence, pilot bootstrap validator/smoke command, SQLite migration/backup/restore-check commands, Terraform planning scaffold under `deployments/terraform`, deployment evidence artifacts, local deployment smoke script, SQLite restore check, signed release provenance evidence, and runbooks.
+- Implemented Make targets: `image`, `compose-config`, `compose-up`, `compose-down`, `compose-logs`, `compose-clean`, `deploy-local`, `deploy-local-smoke`, `deployment-check`, `k8s-validate`, `terraform-validate`, `deployment-evidence`, `pilot-bootstrap-check`, `pilot-backup-check`, `pilot-deploy-check`, `sqlite-restore-check`, `release-provenance`, `release-provenance-check`, `release-artifacts-check`, and `package-handoff`.
+- Not implemented: cloud resource creation, Kubernetes cluster deployment, Terraform apply, live Polygon deployment, live RPC dependency, provider-specific secret-manager API calls, managed observability deployment, or release promotion automation.
 
 ## Evidence fabric status
 
 - Implemented: hash-only external API and CLI, first-class submission/receipt/verification types, evidence ID/receipt ID/idempotency/QC indexes, receipt export, manifest-history verification against receipt membership version/hash, optional anchor-status field, scoped hashed API keys with roles, `pqfabric auth hash-token`, `pqfabric manifest generate`, `pqfabric manifest verify`, `pqfabric report`, `pqfabric migrate-sqlite`, `pqfabric backup`, `pqfabric restore-check`, `/v1/audit/recent`, `/v1/ops/report`, memory/durable/SQLite audit and receipt records, SQLite schema migration tracking, backup integrity/checksum reports, lightweight per-key rate limiting, strengthened readiness, low-cardinality Prometheus text metrics, `PQFABRIC_OPS_LISTEN_ADDR` probe surface, structured logs, optional OTLP/HTTP OpenTelemetry tracing, alert-rule templates, JSON consortium manifest validation, peer mTLS for internal validator endpoints, per-validator Kubernetes TLS projection, cloud-kms remote signer validation/signing, receipt membership version/hash fields, HSM fail-closed boundary, provider-neutral bootstrap validation/smoke evidence with redacted secret-source reporting, threat model, consortium operator notes, and stricter production-mode startup checks.
-- Not implemented: native HSM signing, automated governance approval for validator enrollment or replacement, live Polygon testnet transactions, centralized audit shipping, managed dashboards/SIEM delivery, cloud deployment resources, provider-specific secret-manager API calls, image signing, or release attestation.
+- Not implemented: native HSM signing, automated governance approval for validator enrollment or replacement, live Polygon testnet transactions, centralized audit shipping, managed dashboards/SIEM delivery, cloud deployment resources, provider-specific secret-manager API calls, or release promotion automation.
 
 ## Final handoff status
 
@@ -96,9 +96,10 @@ This document records the current prototype status for future implementation pha
 
 ## CI/CD status
 
-- Implemented: GitHub Actions `ci`, `production-readiness`, and `security` workflows on PRs, pushes to `main`, manual dispatch, and weekly schedules.
-- Implemented CI checks: Go tests/vet, `make verify`, focused race tests, Foundry contract tests, docs/repo hygiene, macOS smoke tests, Kubernetes/Terraform/deployment evidence checks, CodeQL, gitleaks, and Trivy high/critical library scanning.
-- Not implemented: live deployment, registry publishing, release signing, Terraform apply, cloud resource creation, or enforced GitHub branch protection/rulesets.
+- Implemented: GitHub Actions `ci`, `production-readiness`, `security`, and `release-artifacts` workflows on PRs, pushes to `main`, manual dispatch, and weekly schedules where appropriate.
+- Implemented CI checks: Go tests/vet, `make verify`, focused race tests, Foundry contract tests, docs/repo hygiene, macOS smoke tests, Kubernetes/Terraform/deployment evidence checks, CodeQL, gitleaks, Trivy high/critical library scanning, multi-architecture image builds, image scanning, GHCR publishing on `main`/`v*` tags, keyless cosign signing, and provenance artifact upload.
+- Implemented repository protection: `main` requires the production-path checks, uses strict status checks, requires linear history, and disallows force pushes and deletions.
+- Not implemented: live deployment, Terraform apply, cloud resource creation, release promotion automation, or managed environment rollout.
 
 ## Test evidence
 
@@ -250,6 +251,7 @@ make deployment-evidence PASS
 make pilot-bootstrap-check PASS
 make pilot-backup-check PASS
 make release-provenance-check PASS
+make release-artifacts-check PASS
 ```
 
 Generated deployment evidence artifacts:
@@ -283,6 +285,8 @@ tmp/release-provenance.json
 tmp/release-provenance.txt
 tmp/go-modules.txt
 tmp/sbom.spdx.json # optional, only when syft is installed
+tmp/image-digest.txt
+tmp/cosign-verify.txt
 ```
 
 Phase 10 final handoff validation:

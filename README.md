@@ -379,11 +379,12 @@ such as manifests and certificates. Tokens and private keys are never printed or
 fingerprinted.
 
 `scripts/release-provenance.sh` writes `tmp/release-provenance.json`,
-`tmp/release-provenance.txt`, and `tmp/go-modules.txt`. It records Go/tool
-versions, module inventory, image reference/digest status, optional SBOM
-generation, and optional cosign verification when `PQFABRIC_IMAGE_REF` and
-`PQFABRIC_COSIGN_VERIFY=true` are set. Missing optional tools are reported as
-explicit skips, not hidden successes.
+`tmp/release-provenance.txt`, `tmp/go-modules.txt`, `tmp/image-digest.txt`, and
+`tmp/cosign-verify.txt`. It records Go/tool versions, module inventory, image
+reference/digest status, SBOM status, cosign verification evidence, and whether
+the run is local or published. Missing optional local tools are reported as
+explicit skips, while published release mode fails unless digest, SBOM, clean
+git state, and cosign verification evidence are present.
 
 SQLite upgrade safety is available through:
 
@@ -413,10 +414,13 @@ GitHub Actions are split into three production-path gates:
   provenance, and e2e evidence, then uploads evidence artifacts.
 - `security` runs CodeQL, gitleaks secret scanning, and Trivy dependency
   scanning for high/critical library vulnerabilities.
+- `release-artifacts` builds multi-architecture images, scans them, publishes
+  signed artifacts to `ghcr.io/keithwegner/pq-fabric` on `main` and `v*` tags,
+  and uploads digest/SBOM/provenance evidence.
 
-See `docs/ci-cd.md` for the required-check policy. The current CD boundary is
-evidence-only; it does not publish images, sign releases, apply Kubernetes
-manifests, or deploy cloud resources.
+See `docs/ci-cd.md` and `docs/release-artifacts.md` for the required-check and
+artifact policy. The current CD boundary publishes signed images only; it does
+not apply Kubernetes manifests, run Terraform apply, or deploy cloud resources.
 
 ## Packaging and handoff
 

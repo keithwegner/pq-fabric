@@ -16,7 +16,7 @@ The handoff objective is reproducibility. A reviewer should be able to run local
 - Bundle protocol scaffolding with virtual AI context channels, priority scheduling, custody confirmation, retransmission, deduplication, and reconciliation.
 - Local mock OpenAI-compatible request/response shape with no external API call.
 - Polygon-compatible anchor contracts plus Go mock anchor backend for identity, credential, governance, and quorum-certificate hash anchors.
-- Docker Compose, Kubernetes, and Terraform scaffolding for local handoff and future controlled deployment planning.
+- Docker Compose, Kubernetes, Terraform, and signed-release scaffolding for local handoff and future controlled deployment planning.
 
 ## Prototype-Only Boundaries
 
@@ -28,6 +28,7 @@ The handoff objective is reproducibility. A reviewer should be able to run local
 - Bundle and AI context handling are local deterministic scaffolds.
 - Polygon anchoring stores hashes/metadata only; PQ and QC verification remain off-chain.
 - Deployment files are scaffolding and validation targets only.
+- Signed release artifacts are deployable inputs, not proof of a live deployment.
 
 ## Run Everything
 
@@ -42,6 +43,7 @@ make package-evidence
 Optional tools may be skipped with clear messages:
 
 - Docker daemon for image builds.
+- Syft and cosign for local SBOM/signature evidence.
 - Foundry `forge` for Solidity tests.
 - `kubectl` for Kubernetes rendering.
 - Terraform for scaffold validation.

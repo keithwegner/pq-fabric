@@ -62,7 +62,7 @@ variable "quorum_threshold" {
 }
 
 variable "container_image" {
-  description = "Container image reference for future runtime wiring."
+  description = "Container image reference for future runtime wiring. Staging and production-pilot should use a signed digest-pinned GHCR image."
   type        = string
   default     = "pq-fabric:local"
 }

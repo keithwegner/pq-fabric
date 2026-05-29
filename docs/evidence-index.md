@@ -72,20 +72,22 @@ All evidence is local engineering evidence. It is not certification, production 
 - Output:
   - `tmp/deployment-evidence.json`
   - `tmp/deployment-evidence.txt`
-- Shows: Dockerfile presence, Compose topology validation, validator/relay service counts, local-only networking, Kubernetes rendering when available, Terraform validation when available, config templates, secret guardrails, redacted bootstrap secret-source evidence, and release provenance status.
+- Shows: Dockerfile presence, Compose topology validation, validator/relay service counts, local-only networking, Kubernetes rendering when available, Terraform validation when available, config templates, secret guardrails, redacted bootstrap secret-source evidence, release provenance status, and signed-image placeholder wiring.
 - Does not show: cloud deployment, Kubernetes deployment, Terraform apply, live Polygon, or public network readiness.
 - Failure interpretation: inspect optional tool availability and config rendering errors.
 
 ## Secret And Release Evidence
 
-- Generate: `make pilot-bootstrap-check` and `make release-provenance-check`
+- Generate: `make pilot-bootstrap-check`, `make release-provenance-check`, and `make release-artifacts-check`
 - Output:
   - `tmp/pilot-bootstrap-validate.json`
   - `tmp/pilot-bootstrap-smoke.json`
   - `tmp/release-provenance.json`
+  - `tmp/image-digest.txt`
+  - `tmp/cosign-verify.txt`
   - `tmp/go-modules.txt`
-- Shows: External Secrets store refs, expected secret mount paths, resolved/unresolved status, redacted content evidence, Go module inventory, image reference/digest status, optional SBOM, and optional cosign verification status.
-- Does not show: raw tokens, private keys, cloud secret fetches, registry publishing, image signing, or release attestation.
+- Shows: External Secrets store refs, expected secret mount paths, resolved/unresolved status, redacted content evidence, Go module inventory, image reference/digest status, SBOM status, cosign verification status, and static release-artifact workflow guardrails.
+- Does not show: raw tokens, private keys, cloud secret fetches, cloud deployment, Kubernetes apply, Terraform apply, or release promotion.
 
 ## Integrated E2E Evidence
 

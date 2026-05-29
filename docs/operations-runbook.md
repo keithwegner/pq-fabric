@@ -251,10 +251,12 @@ Validator data lives under `data/validator-*` in local Compose. Do not copy or p
   only for manifests and certificate material. Tokens and private keys are not
   printed or fingerprinted.
 - `scripts/release-provenance.sh` records Go/tool versions, module inventory,
-  image reference/digest status, optional SBOM generation, and optional cosign
-  verification. Set `PQFABRIC_IMAGE_REF` plus
-  `PQFABRIC_COSIGN_VERIFY=true` only when a signed image is available for
-  verification.
+  image reference/digest status, SBOM status, cosign verification evidence, and
+  whether the run is local or published. Published release mode is produced by
+  the `release-artifacts` workflow and requires a clean git tree, digest-pinned
+  GHCR image, SBOM, and successful keyless cosign verification. Local mode may
+  report explicit skips when Docker, syft, cosign, or a registry digest is
+  unavailable.
 - The default anchor backend is `mock`.
 - Production guardrails require `PQ_FABRIC_PRODUCTION_MODE=1`,
   `PQ_FABRIC_CRYPTO_SUITE=pq`, `PQFABRIC_API_KEYS_FILE=<path>`,

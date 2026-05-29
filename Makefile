@@ -1,4 +1,4 @@
-.PHONY: verify test demo fault-demo failure-evidence routing-demo routing-evidence routing-tests bundle-tests bundle-demo bundle-evidence contract-tests anchor-tests anchor-demo anchor-evidence validator pqfabric fmt lint-lite crypto-vectors crypto-vectors-mlkem crypto-vectors-mldsa image compose-config compose-up compose-down compose-logs compose-clean deploy-local deploy-local-smoke deployment-check k8s-validate terraform-validate deployment-evidence pilot-bootstrap-check pilot-backup-check pilot-deploy-check release-provenance release-provenance-check sqlite-restore-check e2e-demo e2e-evidence docs-check observability-check repo-hygiene final-verify tidy package package-handoff package-evidence
+.PHONY: verify test demo fault-demo failure-evidence routing-demo routing-evidence routing-tests bundle-tests bundle-demo bundle-evidence contract-tests anchor-tests anchor-demo anchor-evidence validator pqfabric fmt lint-lite crypto-vectors crypto-vectors-mlkem crypto-vectors-mldsa image compose-config compose-up compose-down compose-logs compose-clean deploy-local deploy-local-smoke deployment-check k8s-validate terraform-validate deployment-evidence pilot-bootstrap-check pilot-backup-check pilot-deploy-check release-provenance release-provenance-check release-artifacts-check sqlite-restore-check e2e-demo e2e-evidence docs-check observability-check repo-hygiene final-verify tidy package package-handoff package-evidence
 
 verify: test demo
 
@@ -125,8 +125,13 @@ release-provenance-check:
 	rg -q '"status": "pass|pass_with_skips"' tmp/release-provenance.json
 	rg -q '"go_module_inventory"' tmp/release-provenance.json
 	rg -q '"image_reference"' tmp/release-provenance.json
+	rg -q '"image_digest_file"' tmp/release-provenance.json
 	rg -q '"sbom_status"' tmp/release-provenance.json
 	rg -q '"cosign_status"' tmp/release-provenance.json
+	rg -q '"cosign_verify_file"' tmp/release-provenance.json
+
+release-artifacts-check:
+	./scripts/release-artifacts-check.sh
 
 sqlite-restore-check:
 	go run ./cmd/sqlite-restore-check
@@ -163,6 +168,7 @@ final-verify:
 	$(MAKE) pilot-bootstrap-check
 	$(MAKE) pilot-backup-check
 	$(MAKE) release-provenance-check
+	$(MAKE) release-artifacts-check
 	$(MAKE) pilot-deploy-check
 	$(MAKE) repo-hygiene
 	$(MAKE) k8s-validate

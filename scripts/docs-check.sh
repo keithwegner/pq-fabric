@@ -19,6 +19,7 @@ required_docs=(
   docs/ai-context-channels.md
   docs/identity-anchors.md
   docs/contracts-polygon.md
+  docs/release-artifacts.md
   docs/deployment-local.md
   docs/deployment-k8s.md
   docs/deployment-terraform.md

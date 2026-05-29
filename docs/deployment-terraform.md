@@ -64,6 +64,11 @@ The `production-pilot` example intentionally keeps `remote_state_configured =
 false` because this slice only records the expected readiness contract. It does
 not create or select a backend.
 
+The production-pilot example uses a digest-pinned
+`ghcr.io/keithwegner/pq-fabric` placeholder for `container_image`. Replace that
+placeholder with a signed image digest from the `release-artifacts` workflow
+before using the value in any real deployment review.
+
 ## Non-Claims
 
 This Terraform scaffold is not production infrastructure, a cloud deployment,

@@ -4,6 +4,10 @@ resources:
   - ../../base
 commonLabels:
   pq-fabric.io/deployment-profile: staging
+images:
+  - name: pq-fabric
+    newName: ghcr.io/keithwegner/pq-fabric
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
 patches:
   - path: config-staging-patch.yaml
   - path: validator-production-patch.yaml

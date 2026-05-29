@@ -55,6 +55,10 @@ release provenance.
 - The production-pilot overlay disables relays, requires HTTPS peer URLs,
   mounts API-key, manifest/history, per-validator peer TLS, and KMS CA secrets,
   and uses SQLite under the validator data volume.
+- Staging and production-pilot overlays use a digest-pinned
+  `ghcr.io/keithwegner/pq-fabric` placeholder. Replace the placeholder digest
+  with the digest emitted by the `release-artifacts` workflow before any real
+  pilot rollout.
 - Each validator pod derives `NODE_ID` from its StatefulSet ordinal and uses
   `/etc/pq-fabric/tls/${NODE_ID}.crt` plus `${NODE_ID}.key`; the peer
   certificate must contain URI SAN
@@ -85,7 +89,9 @@ cloud credentials, RPC URLs with secrets, or generated deployment output.
 - Define storage classes and backup behavior.
 - Bind the External Secrets contract to the selected provider's reviewed
   `ClusterSecretStore` or `SecretStore` in a real cluster.
-- Add image registry publishing and enforce provenance/signature policy.
+- Enforce provenance/signature policy in the target cluster admission path.
+- Require signed, digest-pinned GHCR images before applying manifests in a real
+  cluster.
 - Wire readiness, metrics, OpenTelemetry, and alert templates into the target
   cluster's managed observability stack.
 - Add operator approval gates.
