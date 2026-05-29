@@ -11,6 +11,7 @@ required_docs=(
   docs/final-architecture-summary.md
   docs/claim-safety-review.md
   docs/codex-notes.md
+  docs/ci-cd.md
   docs/crypto-validation.md
   docs/failure-evidence.md
   docs/routing-testbed.md

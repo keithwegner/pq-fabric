@@ -24,6 +24,7 @@ Date: 2026-05-22
 - Pilot bootstrap readiness with `cmd/pilot-bootstrap`, `make pilot-bootstrap-check`, External Secrets store-ref contract validation, redacted secret-source evidence, generated seven-validator production-mode smoke, per-validator URI-SAN peer TLS, fake cloud-KMS signers, and SQLite restore verification.
 - SQLite backup and upgrade safety with schema migration version tracking, `pqfabric migrate-sqlite`, `pqfabric backup`, `pqfabric restore-check`, checksum/integrity reports, and receipt spot-check verification.
 - Release provenance evidence with schema-versioned JSON output, Go module inventory, image reference/digest status, optional SBOM generation, optional cosign verification, and explicit skipped statuses for unavailable tools.
+- GitHub Actions CI/CD gates for Go tests/vet, focused race tests, Foundry contracts, production-readiness evidence, CodeQL, gitleaks, Trivy, scheduled drift checks, and manual dispatch.
 
 ## Validation Performed
 
@@ -57,6 +58,7 @@ Optional checks skip clearly when local tools are unavailable.
 - `tmp/go-modules.txt`
 - `tmp/sbom.spdx.json` when `syft` is installed
 - `tmp/e2e-evidence.json`
+- GitHub Actions artifacts from `production-readiness`
 
 ## Known Limitations
 

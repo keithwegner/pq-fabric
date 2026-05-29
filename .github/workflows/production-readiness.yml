@@ -1,0 +1,63 @@
+name: production-readiness
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    - cron: "43 7 * * 2"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-readiness-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  controlled-pilot-evidence:
+    name: controlled pilot evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_wrapper: false
+      - name: Install kubectl
+        run: |
+          set -euo pipefail
+          version="$(curl -L -s https://dl.k8s.io/release/stable.txt)"
+          curl -L -o kubectl "https://dl.k8s.io/release/${version}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+          kubectl version --client=true
+      - run: make compose-config
+      - run: make k8s-validate
+      - run: make terraform-validate
+      - run: make observability-check
+      - run: make pilot-bootstrap-check
+      - run: make pilot-backup-check
+      - run: make release-provenance-check
+      - run: make pilot-deploy-check
+      - run: make deployment-evidence
+      - run: make e2e-evidence
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: production-readiness-evidence
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            tmp/*.json
+            tmp/*.txt
+            tmp/go-modules.txt
+            tmp/sbom.spdx.json

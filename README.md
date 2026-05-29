@@ -402,6 +402,22 @@ Do not run `terraform apply` for this phase. The Terraform files are
 validation-only scaffolding and contain no real cloud account, provider,
 remote-state, or credential configuration.
 
+## CI/CD
+
+GitHub Actions are split into three production-path gates:
+
+- `ci` runs Go tests/vet, `make verify`, focused race tests, Foundry contract
+  tests, docs/repo hygiene, and a macOS smoke suite.
+- `production-readiness` validates Compose, Kubernetes overlays, Terraform,
+  pilot bootstrap, SQLite backup/restore, deployment evidence, release
+  provenance, and e2e evidence, then uploads evidence artifacts.
+- `security` runs CodeQL, gitleaks secret scanning, and Trivy dependency
+  scanning for high/critical library vulnerabilities.
+
+See `docs/ci-cd.md` for the required-check policy. The current CD boundary is
+evidence-only; it does not publish images, sign releases, apply Kubernetes
+manifests, or deploy cloud resources.
+
 ## Packaging and handoff
 
 Build local binaries or the Docker image with:

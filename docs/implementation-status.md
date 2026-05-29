@@ -94,6 +94,12 @@ This document records the current prototype status for future implementation pha
 - Integrated evidence covers consensus/fault/durability, routing, bundle/mock AI, anchors, deployment scaffold validation, tool availability, and explicit non-claims.
 - Not implemented: managed observability stack, external dashboards, public deployment, live model calls, live Polygon transactions, or certification package.
 
+## CI/CD status
+
+- Implemented: GitHub Actions `ci`, `production-readiness`, and `security` workflows on PRs, pushes to `main`, manual dispatch, and weekly schedules.
+- Implemented CI checks: Go tests/vet, `make verify`, focused race tests, Foundry contract tests, docs/repo hygiene, macOS smoke tests, Kubernetes/Terraform/deployment evidence checks, CodeQL, gitleaks, and Trivy high/critical library scanning.
+- Not implemented: live deployment, registry publishing, release signing, Terraform apply, cloud resource creation, or enforced GitHub branch protection/rulesets.
+
 ## Test evidence
 
 Baseline before Phase 0/1 edits:
