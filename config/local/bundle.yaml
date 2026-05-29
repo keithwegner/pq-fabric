@@ -1,0 +1,18 @@
+bundle_mode: local-prototype
+custody_quorum_threshold: 5
+channels:
+  conversation:
+    priority_weight: 40
+    retention: oldest-first
+  working_memory:
+    priority_weight: 60
+    retention: oldest-first
+  execution:
+    priority_weight: 100
+    retention: retain-until-delivered
+  retrieval:
+    priority_weight: 20
+    retention: lowest-priority-first
+mock_ai_provider:
+  enabled: true
+  external_api_calls: false

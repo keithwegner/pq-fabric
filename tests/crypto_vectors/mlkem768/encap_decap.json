@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "algorithm": "ML-KEM",
+    "parameter_set": "ML-KEM-768",
+    "fixture_source": "pq-fabric deterministic CIRCL adapter fixture",
+    "fixture_date": "2026-05-22",
+    "expected_result_count": 2,
+    "pass_fail_summary": "Each case must derive the expected public key digest, deterministically encapsulate to the expected ciphertext digest and shared secret, decapsulate to the same shared secret, and reject generated malformed or tampered material checks."
+  },
+  "cases": [
+    {
+      "case_id": "mlkem768-encapdecap-001",
+      "key_label": "validator-1",
+      "encapsulation_seed_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "expected_public_key_sha256": "3384ed1d8959f736a60ea6a4e3415edfb6a3506dd67d63521532e9aa178f8fd3",
+      "expected_ciphertext_sha256": "f7b27275c2123278a022528b439ab3eae161e0fc4c45d63ef0738b8b3538fc28",
+      "expected_shared_secret_hex": "b3d15741990bd4f88912c376241e05d7c6e818f2b2657ef1939718b1b50ebcf2"
+    },
+    {
+      "case_id": "mlkem768-encapdecap-002",
+      "key_label": "validator-7",
+      "encapsulation_seed_hex": "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100",
+      "expected_public_key_sha256": "0edd3c27578afde57c4fa04a5b76624c8cdcf62da6da1c690d7e5a84848b4991",
+      "expected_ciphertext_sha256": "2043c8be741851e1e7bc79f681cf0c5d58fff4fc4ac86a958c0e653602b94ce3",
+      "expected_shared_secret_hex": "d67bdf29f401dc6a609668c28456cb27f8fe59c29fe7123e155379bf0a7604b0"
+    }
+  ]
+}

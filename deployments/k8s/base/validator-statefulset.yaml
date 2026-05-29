@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: validator
+  namespace: pq-fabric
+spec:
+  serviceName: validator
+  replicas: 7
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: validator
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pq-fabric
+        app.kubernetes.io/component: validator
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: validator
+          image: pq-fabric:local
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              ordinal="${HOSTNAME##*-}"
+              validator_num="$((ordinal + 1))"
+              export NODE_ID="validator-${validator_num}"
+              case "${validator_num}" in
+                1|2) export REGION="nyc" ;;
+                3|4) export REGION="london" ;;
+                *) export REGION="singapore" ;;
+              esac
+              export PUBLIC_URL="http://${HOSTNAME}.validator.pq-fabric.svc.cluster.local:8080"
+              export DATA_DIR="/data/${NODE_ID}"
+              exec /app/validator
+          envFrom:
+            - configMapRef:
+                name: pq-fabric-config
+          env:
+            - name: PORT
+              value: "8080"
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          volumeMounts:
+            - name: validator-data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: validator-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

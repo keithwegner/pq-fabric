@@ -1,0 +1,30 @@
+name: pq-fabric-three-region-simulation
+purpose: future controlled deployment planning only
+regions:
+  nyc:
+    validators:
+      - validator-1
+      - validator-2
+    relays:
+      - relay-1
+      - relay-2
+  london:
+    validators:
+      - validator-3
+      - validator-4
+    relays:
+      - relay-3
+      - relay-4
+  singapore:
+    validators:
+      - validator-5
+      - validator-6
+      - validator-7
+    relays:
+      - relay-5
+      - relay-6
+      - relay-7
+quorum_threshold: 5
+storage: durable
+anchor_backend: mock-by-default
+routing_boundary: private-testbed-only

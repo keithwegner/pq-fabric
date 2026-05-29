@@ -1,0 +1,164 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: validator
+  namespace: pq-fabric
+spec:
+  replicas: 7
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: validator
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              ordinal="${HOSTNAME##*-}"
+              validator_num="$((ordinal + 1))"
+              export NODE_ID="validator-${validator_num}"
+              case "${validator_num}" in
+                1|2) export REGION="nyc" ;;
+                3|4) export REGION="london" ;;
+                *) export REGION="singapore" ;;
+              esac
+              export PUBLIC_URL="https://${HOSTNAME}.validator.pq-fabric.svc.cluster.local:8080"
+              export DATA_DIR="/data/${NODE_ID}"
+              export PQFABRIC_DATABASE_URL="/data/${NODE_ID}/validator.db"
+              export PQFABRIC_PEER_TLS_CERT_FILE="/etc/pq-fabric/tls/${NODE_ID}.crt"
+              export PQFABRIC_PEER_TLS_KEY_FILE="/etc/pq-fabric/tls/${NODE_ID}.key"
+              export PQFABRIC_PEER_TLS_CA_FILE="/etc/pq-fabric/tls/ca.crt"
+              unset PQFABRIC_KMS_KEY_ID
+              exec /app/validator
+          env:
+            - name: PORT
+              value: "8080"
+            - name: PQFABRIC_KMS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: pq-fabric-kms
+                  key: token
+            - name: PQFABRIC_OTEL_EXPORTER_OTLP_HEADERS
+              valueFrom:
+                secretKeyRef:
+                  name: pq-fabric-otel
+                  key: otlp-headers
+                  optional: true
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: ops
+              containerPort: 8090
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: ops
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: ops
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 2
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: validator-data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+            - name: api-keys
+              mountPath: /etc/pq-fabric/secrets
+              readOnly: true
+            - name: consortium-manifest
+              mountPath: /etc/pq-fabric/manifest
+              readOnly: true
+            - name: peer-tls
+              mountPath: /etc/pq-fabric/tls
+              readOnly: true
+            - name: kms-ca
+              mountPath: /etc/pq-fabric/kms
+              readOnly: true
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: api-keys
+          secret:
+            secretName: pq-fabric-api-keys
+        - name: consortium-manifest
+          secret:
+            secretName: pq-fabric-consortium-manifest
+            items:
+              - key: current.json
+                path: current.json
+              - key: v1.json
+                path: history/v1.json
+        - name: peer-tls
+          secret:
+            secretName: pq-fabric-peer-tls
+            items:
+              - key: ca.crt
+                path: ca.crt
+              - key: validator-1.crt
+                path: validator-1.crt
+              - key: validator-1.key
+                path: validator-1.key
+              - key: validator-2.crt
+                path: validator-2.crt
+              - key: validator-2.key
+                path: validator-2.key
+              - key: validator-3.crt
+                path: validator-3.crt
+              - key: validator-3.key
+                path: validator-3.key
+              - key: validator-4.crt
+                path: validator-4.crt
+              - key: validator-4.key
+                path: validator-4.key
+              - key: validator-5.crt
+                path: validator-5.crt
+              - key: validator-5.key
+                path: validator-5.key
+              - key: validator-6.crt
+                path: validator-6.crt
+              - key: validator-6.key
+                path: validator-6.key
+              - key: validator-7.crt
+                path: validator-7.crt
+              - key: validator-7.key
+                path: validator-7.key
+        - name: kms-ca
+          secret:
+            secretName: pq-fabric-kms-ca
+  volumeClaimTemplates:
+    - metadata:
+        name: validator-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: pq-fabric-pilot-retain
+        resources:
+          requests:
+            storage: 20Gi

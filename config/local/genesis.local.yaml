@@ -1,0 +1,12 @@
+name: pq-fabric-local
+regions:
+  - nyc
+  - london
+  - singapore
+validator_count: 7
+relay_count: 7
+quorum_threshold: 5
+crypto_suite: dev
+storage: durable
+anchor_backend: mock
+routing_boundary: private-testbed-only

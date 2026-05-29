@@ -1,0 +1,141 @@
+schema_version: pq-fabric.bootstrap.v1
+profile: production-pilot
+consortium_id: regulated-pilot-consortium
+validator_count: 7
+quorum_threshold: 5
+secret_source:
+  mode: external-secret-contract
+  provider: external-secrets-operator
+  path: ../../deployments/secrets/external-secret-contract.example.yaml
+database_url_template: /data/${NODE_ID}/validator.db
+kms:
+  provider: cloud-kms
+  endpoint: https://kms-signing-gateway.example.invalid
+  key_id_template: manifest-signing-key-ref
+  token_ref: pq-fabric-kms/token
+  ca_file: /etc/pq-fabric/kms/ca.crt
+  allow_insecure: false
+otel:
+  enabled: false
+public_exit_routing: false
+mainnet_anchoring: false
+secret_references:
+  - name: pq-fabric-api-keys
+    key: api-keys.json
+    mount_path: /etc/pq-fabric/secrets/api-keys.json
+    sensitivity: api-key-config
+    required: true
+  - name: pq-fabric-consortium-manifest
+    key: current.json
+    mount_path: /etc/pq-fabric/manifest/current.json
+    sensitivity: manifest-current
+    required: true
+  - name: pq-fabric-consortium-manifest
+    key: v1.json
+    mount_path: /etc/pq-fabric/manifest/history/v1.json
+    sensitivity: manifest-history
+    required: true
+  - name: pq-fabric-peer-tls
+    key: ca.crt
+    mount_path: /etc/pq-fabric/tls/ca.crt
+    sensitivity: peer-tls-ca
+    required: true
+  - name: pq-fabric-kms
+    key: token
+    mount_path: /etc/pq-fabric/kms/token
+    sensitivity: kms-token
+    required: true
+  - name: pq-fabric-kms-ca
+    key: ca.crt
+    mount_path: /etc/pq-fabric/kms/ca.crt
+    sensitivity: kms-ca
+    required: true
+  - name: pq-fabric-otel
+    key: otlp-headers
+    mount_path: /etc/pq-fabric/otel/otlp-headers
+    sensitivity: otel-headers
+    required: false
+  - name: pq-fabric-peer-tls
+    key: validator-1.crt
+    mount_path: /etc/pq-fabric/tls/validator-1.crt
+    sensitivity: peer-tls-cert
+    validator_id: validator-1
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-1.key
+    mount_path: /etc/pq-fabric/tls/validator-1.key
+    sensitivity: peer-tls-key
+    validator_id: validator-1
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-2.crt
+    mount_path: /etc/pq-fabric/tls/validator-2.crt
+    sensitivity: peer-tls-cert
+    validator_id: validator-2
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-2.key
+    mount_path: /etc/pq-fabric/tls/validator-2.key
+    sensitivity: peer-tls-key
+    validator_id: validator-2
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-3.crt
+    mount_path: /etc/pq-fabric/tls/validator-3.crt
+    sensitivity: peer-tls-cert
+    validator_id: validator-3
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-3.key
+    mount_path: /etc/pq-fabric/tls/validator-3.key
+    sensitivity: peer-tls-key
+    validator_id: validator-3
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-4.crt
+    mount_path: /etc/pq-fabric/tls/validator-4.crt
+    sensitivity: peer-tls-cert
+    validator_id: validator-4
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-4.key
+    mount_path: /etc/pq-fabric/tls/validator-4.key
+    sensitivity: peer-tls-key
+    validator_id: validator-4
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-5.crt
+    mount_path: /etc/pq-fabric/tls/validator-5.crt
+    sensitivity: peer-tls-cert
+    validator_id: validator-5
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-5.key
+    mount_path: /etc/pq-fabric/tls/validator-5.key
+    sensitivity: peer-tls-key
+    validator_id: validator-5
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-6.crt
+    mount_path: /etc/pq-fabric/tls/validator-6.crt
+    sensitivity: peer-tls-cert
+    validator_id: validator-6
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-6.key
+    mount_path: /etc/pq-fabric/tls/validator-6.key
+    sensitivity: peer-tls-key
+    validator_id: validator-6
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-7.crt
+    mount_path: /etc/pq-fabric/tls/validator-7.crt
+    sensitivity: peer-tls-cert
+    validator_id: validator-7
+    required: true
+  - name: pq-fabric-peer-tls
+    key: validator-7.key
+    mount_path: /etc/pq-fabric/tls/validator-7.key
+    sensitivity: peer-tls-key
+    validator_id: validator-7
+    required: true

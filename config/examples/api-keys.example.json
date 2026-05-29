@@ -1,0 +1,19 @@
+{
+  "keys": [
+    {
+      "id": "local-admin",
+      "name": "Local Admin Example",
+      "organization": "example-org",
+      "token_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "roles": [
+        "admin:read",
+        "anchor:read",
+        "evidence:read",
+        "evidence:submit",
+        "evidence:verify"
+      ],
+      "disabled": true,
+      "created_at_unix_milli": 0
+    }
+  ]
+}

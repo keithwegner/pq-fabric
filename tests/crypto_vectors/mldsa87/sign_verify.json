@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "algorithm": "ML-DSA",
+    "parameter_set": "ML-DSA-87",
+    "fixture_source": "pq-fabric deterministic CIRCL adapter fixture",
+    "fixture_date": "2026-05-22",
+    "expected_result_count": 2,
+    "pass_fail_summary": "Each case must derive the expected public key digest, produce the expected deterministic signature digest, verify the valid signature, and reject generated tampering checks."
+  },
+  "cases": [
+    {
+      "case_id": "mldsa87-sign-verify-001",
+      "node_id": "validator-1",
+      "message_hex": "70712d66616272696320766563746f72206d6573736167653a2076616c696461746f722d312070726f706f73616c20646967657374",
+      "expected_public_key_sha256": "705e75ffa0a8d058defaf3a8f7d27cb80c2ae36e5155d6c0504622a65c92eb80",
+      "expected_signature_sha256": "6c6d2f8e24019cadb214d3e3f44941405fac1bdb137b62f62b0103692cae55fc"
+    },
+    {
+      "case_id": "mldsa87-sign-verify-002",
+      "node_id": "validator-5",
+      "message_hex": "70712d66616272696320766563746f72206d6573736167653a2076616c696461746f722d3520636f6d6d697420766f7465",
+      "expected_public_key_sha256": "9ac51e2a7652c23940d813eef98d2d7f9f46df8a0ae2af161093f29cb46e3521",
+      "expected_signature_sha256": "c6d11e7736896556d682174186f8213994d2219855c8ff59acec9e1d5beaddfc"
+    }
+  ]
+}

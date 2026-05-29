@@ -1,0 +1,24 @@
+{
+  "schema_version": "pq-fabric.consortium.v1",
+  "consortium_id": "example-consortium",
+  "membership_version": 1,
+  "quorum_threshold": 5,
+  "validators": [
+    {
+      "id": "validator-1",
+      "operator": "operator-validator-1",
+      "region": "nyc",
+      "public_url": "https://validator-1.example.invalid",
+      "signature_algorithm": "ML-DSA-87",
+      "signature_public_key": "replace-with-generated-base64-public-key",
+      "signature_key_fingerprint": "replace-with-generated-fingerprint",
+      "kem_algorithm": "ML-KEM-768",
+      "kem_public_key": "replace-with-generated-base64-public-key",
+      "kem_key_fingerprint": "replace-with-generated-fingerprint",
+      "key_id": "replace-with-generated-key-id",
+      "signing_key_ref": "replace-with-kms-key-resource-id",
+      "tls_uri_san": "spiffe://example-consortium/validator/validator-1",
+      "active": true
+    }
+  ]
+}

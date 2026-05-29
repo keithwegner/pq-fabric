@@ -1,0 +1,32 @@
+# Placeholder values only. Do not commit account IDs, credentials, subnet IDs, keys, or state.
+project_name     = "pq-fabric"
+environment      = "controlled-three-region-test"
+deployment_profile = "production-pilot"
+validator_count  = 7
+relay_count      = 7
+quorum_threshold = 5
+container_image  = "example.invalid/pq-fabric:phase9"
+enable_public_exits = false
+remote_state_configured = false
+secret_reference_names = [
+  "pq-fabric-api-keys",
+  "pq-fabric-consortium-manifest",
+  "pq-fabric-peer-tls",
+  "pq-fabric-kms",
+  "pq-fabric-kms-ca",
+]
+
+regions = {
+  nyc = {
+    label      = "us-east-placeholder"
+    cidr_block = "10.91.0.0/20"
+  }
+  london = {
+    label      = "eu-west-placeholder"
+    cidr_block = "10.92.0.0/20"
+  }
+  singapore = {
+    label      = "ap-southeast-placeholder"
+    cidr_block = "10.93.0.0/20"
+  }
+}

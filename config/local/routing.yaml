@@ -1,0 +1,15 @@
+routing_mode: private-testbed
+public_relay_discovery: false
+public_exit_routing: false
+socks5:
+  listen_addr: 127.0.0.1:1080
+  allowed_commands:
+    - CONNECT
+exit_policy:
+  default: deny
+  allowlist:
+    - local-echo:7000
+    - local-http:8080
+stream_multiplexing:
+  enabled: true
+  max_streams_per_circuit: 16

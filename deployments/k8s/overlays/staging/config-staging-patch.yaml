@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pq-fabric-config
+  namespace: pq-fabric
+data:
+  PQ_FABRIC_CRYPTO_SUITE: "pq"
+  PQ_FABRIC_PRODUCTION_MODE: "true"
+  PQFABRIC_SIGNER_PROVIDER: "cloud-kms"
+  PQFABRIC_ALLOW_LOCAL_SIGNER: "false"
+  PQFABRIC_KMS_ENDPOINT: "https://kms-signing-gateway.example.invalid"
+  PQFABRIC_KMS_CA_FILE: "/etc/pq-fabric/kms/ca.crt"
+  PQFABRIC_KMS_ALLOW_INSECURE: "false"
+  PQFABRIC_CONSORTIUM_MANIFEST: "/etc/pq-fabric/manifest/current.json"
+  PQFABRIC_CONSORTIUM_MANIFEST_HISTORY: "/etc/pq-fabric/manifest/history/v1.json,/etc/pq-fabric/manifest/current.json"
+  PQFABRIC_OPS_LISTEN_ADDR: ":8090"
+  PQFABRIC_LOG_FORMAT: "json"
+  STORAGE: "sqlite"
+  QUORUM_THRESHOLD: "5"
+  THRESHOLD: "5"
+  ROUTING_MODE: "private-testbed"
+  ANCHOR_BACKEND: "mock"
+  PUBLIC_EXIT_ROUTING: "false"
+  PEERS: "validator-1=https://validator-0.validator.pq-fabric.svc.cluster.local:8080,validator-2=https://validator-1.validator.pq-fabric.svc.cluster.local:8080,validator-3=https://validator-2.validator.pq-fabric.svc.cluster.local:8080,validator-4=https://validator-3.validator.pq-fabric.svc.cluster.local:8080,validator-5=https://validator-4.validator.pq-fabric.svc.cluster.local:8080,validator-6=https://validator-5.validator.pq-fabric.svc.cluster.local:8080,validator-7=https://validator-6.validator.pq-fabric.svc.cluster.local:8080"

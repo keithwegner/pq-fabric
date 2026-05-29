@@ -1,0 +1,292 @@
+x-pq-fabric-image: &pq-fabric-image
+  image: pq-fabric:local
+  build:
+    context: .
+
+x-validator-env: &validator-env
+  PORT: "8080"
+  PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+  PQ_FABRIC_PRODUCTION_MODE: ${PQ_FABRIC_PRODUCTION_MODE:-0}
+  API_BEARER_TOKEN: ${API_BEARER_TOKEN:-}
+  PQFABRIC_API_KEYS_FILE: ${PQFABRIC_API_KEYS_FILE:-}
+  PQFABRIC_CONSORTIUM_MANIFEST: ${PQFABRIC_CONSORTIUM_MANIFEST:-}
+  PQFABRIC_CONSORTIUM_MANIFEST_HISTORY: ${PQFABRIC_CONSORTIUM_MANIFEST_HISTORY:-}
+  PQFABRIC_SIGNER_PROVIDER: ${PQFABRIC_SIGNER_PROVIDER:-local}
+  PQFABRIC_ALLOW_LOCAL_SIGNER: ${PQFABRIC_ALLOW_LOCAL_SIGNER:-false}
+  PQFABRIC_KMS_KEY_ID: ${PQFABRIC_KMS_KEY_ID:-}
+  PQFABRIC_KMS_ENDPOINT: ${PQFABRIC_KMS_ENDPOINT:-}
+  PQFABRIC_KMS_TOKEN: ${PQFABRIC_KMS_TOKEN:-}
+  PQFABRIC_KMS_CA_FILE: ${PQFABRIC_KMS_CA_FILE:-}
+  PQFABRIC_KMS_ALLOW_INSECURE: ${PQFABRIC_KMS_ALLOW_INSECURE:-false}
+  PQFABRIC_DATABASE_URL: ${PQFABRIC_DATABASE_URL:-}
+  PQFABRIC_PEER_TLS_CERT_FILE: ${PQFABRIC_PEER_TLS_CERT_FILE:-}
+  PQFABRIC_PEER_TLS_KEY_FILE: ${PQFABRIC_PEER_TLS_KEY_FILE:-}
+  PQFABRIC_PEER_TLS_CA_FILE: ${PQFABRIC_PEER_TLS_CA_FILE:-}
+  PQFABRIC_RATE_LIMIT_PER_MINUTE: ${PQFABRIC_RATE_LIMIT_PER_MINUTE:-60}
+  PQFABRIC_RATE_LIMIT_BURST: ${PQFABRIC_RATE_LIMIT_BURST:-20}
+  PQFABRIC_LOG_FORMAT: ${PQFABRIC_LOG_FORMAT:-}
+  PQFABRIC_OTEL_ENABLED: ${PQFABRIC_OTEL_ENABLED:-false}
+  PQFABRIC_OTEL_SERVICE_NAME: ${PQFABRIC_OTEL_SERVICE_NAME:-pq-fabric-validator}
+  PQFABRIC_OTEL_EXPORTER_OTLP_ENDPOINT: ${PQFABRIC_OTEL_EXPORTER_OTLP_ENDPOINT:-}
+  PQFABRIC_OTEL_EXPORTER_OTLP_HEADERS: ${PQFABRIC_OTEL_EXPORTER_OTLP_HEADERS:-}
+  PQFABRIC_OTEL_EXPORTER_OTLP_INSECURE: ${PQFABRIC_OTEL_EXPORTER_OTLP_INSECURE:-false}
+  STORAGE: durable
+  QUORUM_THRESHOLD: "5"
+  THRESHOLD: "5"
+  ROUTING_MODE: private-testbed
+  ANCHOR_BACKEND: mock
+  PROPOSAL_TIMEOUT_MS: "700"
+  VOTE_TIMEOUT_MS: "700"
+  MAX_ROUNDS: "7"
+  PEERS: validator-1=http://validator-1:8080,validator-2=http://validator-2:8080,validator-3=http://validator-3:8080,validator-4=http://validator-4:8080,validator-5=http://validator-5:8080,validator-6=http://validator-6:8080,validator-7=http://validator-7:8080
+
+x-validator-service: &validator-service
+  <<: *pq-fabric-image
+  restart: unless-stopped
+  networks:
+    - pq-fabric-local
+  healthcheck:
+    test: ["CMD", "/app/healthcheck", "http://127.0.0.1:8080/health"]
+    interval: 30s
+    timeout: 5s
+    retries: 2
+
+x-relay-service: &relay-service
+  <<: *pq-fabric-image
+  entrypoint: ["/app/relay"]
+  profiles: ["relays"]
+  restart: unless-stopped
+  networks:
+    - pq-fabric-local
+  environment:
+    PORT: "8080"
+    PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+    ROUTING_MODE: private-testbed
+    EXIT_POLICY: local-only
+  healthcheck:
+    test: ["CMD", "/app/healthcheck", "http://127.0.0.1:8080/health"]
+    interval: 30s
+    timeout: 5s
+    retries: 2
+
+services:
+  validator-1:
+    <<: *validator-service
+    environment:
+      <<: *validator-env
+      NODE_ID: validator-1
+      REGION: nyc
+      PUBLIC_URL: http://validator-1:8080
+      DATA_DIR: /data/validator-1
+      AUTO_PROPOSE: "1"
+      PROPOSE_INTERVAL_SECONDS: "15"
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - ./data/validator-1:/data/validator-1
+
+  validator-2:
+    <<: *validator-service
+    environment:
+      <<: *validator-env
+      NODE_ID: validator-2
+      REGION: nyc
+      PUBLIC_URL: http://validator-2:8080
+      DATA_DIR: /data/validator-2
+    ports:
+      - "127.0.0.1:8082:8080"
+    volumes:
+      - ./data/validator-2:/data/validator-2
+
+  validator-3:
+    <<: *validator-service
+    environment:
+      <<: *validator-env
+      NODE_ID: validator-3
+      REGION: london
+      PUBLIC_URL: http://validator-3:8080
+      DATA_DIR: /data/validator-3
+    ports:
+      - "127.0.0.1:8083:8080"
+    volumes:
+      - ./data/validator-3:/data/validator-3
+
+  validator-4:
+    <<: *validator-service
+    environment:
+      <<: *validator-env
+      NODE_ID: validator-4
+      REGION: london
+      PUBLIC_URL: http://validator-4:8080
+      DATA_DIR: /data/validator-4
+    ports:
+      - "127.0.0.1:8084:8080"
+    volumes:
+      - ./data/validator-4:/data/validator-4
+
+  validator-5:
+    <<: *validator-service
+    environment:
+      <<: *validator-env
+      NODE_ID: validator-5
+      REGION: singapore
+      PUBLIC_URL: http://validator-5:8080
+      DATA_DIR: /data/validator-5
+    ports:
+      - "127.0.0.1:8085:8080"
+    volumes:
+      - ./data/validator-5:/data/validator-5
+
+  validator-6:
+    <<: *validator-service
+    environment:
+      <<: *validator-env
+      NODE_ID: validator-6
+      REGION: singapore
+      PUBLIC_URL: http://validator-6:8080
+      DATA_DIR: /data/validator-6
+    ports:
+      - "127.0.0.1:8086:8080"
+    volumes:
+      - ./data/validator-6:/data/validator-6
+
+  validator-7:
+    <<: *validator-service
+    environment:
+      <<: *validator-env
+      NODE_ID: validator-7
+      REGION: singapore
+      PUBLIC_URL: http://validator-7:8080
+      DATA_DIR: /data/validator-7
+    ports:
+      - "127.0.0.1:8087:8080"
+    volumes:
+      - ./data/validator-7:/data/validator-7
+
+  relay-1:
+    <<: *relay-service
+    environment:
+      RELAY_ID: relay-1
+      REGION: nyc
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+      ROUTING_MODE: private-testbed
+
+  relay-2:
+    <<: *relay-service
+    environment:
+      RELAY_ID: relay-2
+      REGION: nyc
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+      ROUTING_MODE: private-testbed
+
+  relay-3:
+    <<: *relay-service
+    environment:
+      RELAY_ID: relay-3
+      REGION: london
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+      ROUTING_MODE: private-testbed
+
+  relay-4:
+    <<: *relay-service
+    environment:
+      RELAY_ID: relay-4
+      REGION: london
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+      ROUTING_MODE: private-testbed
+
+  relay-5:
+    <<: *relay-service
+    environment:
+      RELAY_ID: relay-5
+      REGION: singapore
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+      ROUTING_MODE: private-testbed
+
+  relay-6:
+    <<: *relay-service
+    environment:
+      RELAY_ID: relay-6
+      REGION: singapore
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+      ROUTING_MODE: private-testbed
+
+  relay-7:
+    <<: *relay-service
+    environment:
+      RELAY_ID: relay-7
+      REGION: singapore
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+      ROUTING_MODE: private-testbed
+
+  demo:
+    <<: *pq-fabric-image
+    entrypoint: ["/app/demo"]
+    profiles: ["demos"]
+    environment:
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+    networks:
+      - pq-fabric-local
+
+  fault-demo:
+    <<: *pq-fabric-image
+    entrypoint: ["/app/fault-demo"]
+    profiles: ["evidence"]
+    environment:
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+    volumes:
+      - ./tmp:/app/tmp
+    networks:
+      - pq-fabric-local
+
+  routing-demo:
+    <<: *pq-fabric-image
+    entrypoint: ["/app/routing-demo"]
+    profiles: ["demos", "evidence"]
+    environment:
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+    volumes:
+      - ./tmp:/app/tmp
+    networks:
+      - pq-fabric-local
+
+  bundle-demo:
+    <<: *pq-fabric-image
+    entrypoint: ["/app/bundle-demo"]
+    profiles: ["demos", "evidence"]
+    environment:
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+    volumes:
+      - ./tmp:/app/tmp
+    networks:
+      - pq-fabric-local
+
+  anchor-demo:
+    <<: *pq-fabric-image
+    entrypoint: ["/app/anchor-demo"]
+    profiles: ["anchors", "demos", "evidence"]
+    environment:
+      PQ_FABRIC_CRYPTO_SUITE: ${PQ_FABRIC_CRYPTO_SUITE:-dev}
+      ANCHOR_BACKEND: mock
+    volumes:
+      - ./tmp:/app/tmp
+    networks:
+      - pq-fabric-local
+
+  deployment-evidence:
+    <<: *pq-fabric-image
+    entrypoint: ["/app/deployment-evidence"]
+    profiles: ["evidence"]
+    environment:
+      ANCHOR_BACKEND: mock
+    volumes:
+      - .:/workspace:ro
+      - ./tmp:/workspace/tmp
+    working_dir: /workspace
+    networks:
+      - pq-fabric-local
+
+networks:
+  pq-fabric-local:
+    name: pq-fabric-local
+    internal: true

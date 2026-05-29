@@ -1,0 +1,26 @@
+topology: local-seven-relay-private-testbed
+routing_mode: private-testbed
+crypto_suite: dev
+exit_policy: local-only
+relays:
+  - id: relay-1
+    region: nyc
+  - id: relay-2
+    region: nyc
+  - id: relay-3
+    region: london
+  - id: relay-4
+    region: london
+  - id: relay-5
+    region: singapore
+  - id: relay-6
+    region: singapore
+  - id: relay-7
+    region: singapore
+default_circuit:
+  entry: relay-1
+  middle: relay-4
+  exit: relay-7
+allowed_destinations:
+  - local-echo:7000
+  - local-http:8080

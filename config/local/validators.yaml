@@ -1,0 +1,34 @@
+topology: local-seven-validator
+crypto_suite: dev
+storage: durable
+quorum_threshold: 5
+data_root: ./data
+validators:
+  - id: validator-1
+    region: nyc
+    public_url: http://validator-1:8080
+    data_dir: ./data/validator-1
+  - id: validator-2
+    region: nyc
+    public_url: http://validator-2:8080
+    data_dir: ./data/validator-2
+  - id: validator-3
+    region: london
+    public_url: http://validator-3:8080
+    data_dir: ./data/validator-3
+  - id: validator-4
+    region: london
+    public_url: http://validator-4:8080
+    data_dir: ./data/validator-4
+  - id: validator-5
+    region: singapore
+    public_url: http://validator-5:8080
+    data_dir: ./data/validator-5
+  - id: validator-6
+    region: singapore
+    public_url: http://validator-6:8080
+    data_dir: ./data/validator-6
+  - id: validator-7
+    region: singapore
+    public_url: http://validator-7:8080
+    data_dir: ./data/validator-7

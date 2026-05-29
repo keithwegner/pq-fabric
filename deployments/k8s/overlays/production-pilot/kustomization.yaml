@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+commonLabels:
+  pq-fabric.io/deployment-profile: production-pilot
+patches:
+  - path: config-production-patch.yaml
+  - path: validator-production-patch.yaml
+  - path: relay-disabled-patch.yaml
+  - path: networkpolicy-production-patch.yaml

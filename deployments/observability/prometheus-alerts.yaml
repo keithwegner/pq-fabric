@@ -1,0 +1,83 @@
+groups:
+  - name: pq-fabric-regulated-pilot
+    rules:
+      - alert: PQFabricReadinessFailure
+        expr: pq_fabric_readiness_ready == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "pq-fabric validator readiness failed"
+          description: "A validator reports that required readiness checks are not passing."
+      - alert: PQFabricLostQuorum
+        expr: pq_fabric_quorum_available == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "pq-fabric quorum unavailable"
+          description: "The validator cannot currently observe enough healthy voting power for 5-of-7 quorum."
+      - alert: PQFabricValidatorDrift
+        expr: pq_fabric_validator_peer_lag > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "pq-fabric validator drift detected"
+          description: "A peer is more than one committed height behind this validator."
+      - alert: PQFabricPeerDown
+        expr: pq_fabric_validator_peer_healthy == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "pq-fabric peer unhealthy"
+          description: "A configured validator peer is not passing internal health probes."
+      - alert: PQFabricSignerFailure
+        expr: increase(pq_fabric_signer_errors_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "pq-fabric signer or KMS failure"
+          description: "A validator observed one or more signing failures."
+      - alert: PQFabricStorageError
+        expr: increase(pq_fabric_storage_errors_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "pq-fabric storage error"
+          description: "A validator observed storage errors while reading or persisting operational evidence."
+      - alert: PQFabricRepeatedUnauthorizedAccess
+        expr: increase(pq_fabric_api_requests_total{status="401"}[10m]) + increase(pq_fabric_api_requests_total{status="403"}[10m]) > 10
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "pq-fabric repeated unauthorized access"
+          description: "The external API is receiving repeated unauthorized or forbidden requests."
+      - alert: PQFabricInvalidSignatures
+        expr: increase(pq_fabric_invalid_signatures_total[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "pq-fabric invalid signature observed"
+          description: "A validator rejected one or more signatures or quorum artifacts."
+      - alert: PQFabricHighDuplicateSubmissions
+        expr: increase(pq_fabric_evidence_duplicate_submissions_total[15m]) > 20
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "pq-fabric duplicate evidence submissions elevated"
+          description: "Clients are repeatedly resubmitting idempotency keys or existing evidence hashes."
+      - alert: PQFabricAnchorUnavailable
+        expr: increase(pq_fabric_anchor_status_total{status="unavailable"}[15m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "pq-fabric anchor lookup unavailable"
+          description: "Anchor lookups are returning unavailable status. Anchoring remains additive and is not required for receipt validity."

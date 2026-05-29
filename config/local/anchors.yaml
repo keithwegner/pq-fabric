@@ -1,0 +1,13 @@
+anchor_backend: mock
+polygon_rpc_url: ""
+contracts:
+  identity_anchor_address: ""
+  credential_anchor_address: ""
+  governance_anchor_address: ""
+  qc_anchor_address: ""
+authorization:
+  identity_admin: local-operator
+  credential_issuer: local-operator
+  governance_admin: local-operator
+  qc_anchorer: local-operator
+boundary: on-chain anchors store hashes and metadata only; PQ signatures and quorum certificates remain verified off-chain.

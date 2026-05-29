@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pq-fabric-config
+  namespace: pq-fabric
+data:
+  PQ_FABRIC_CRYPTO_SUITE: "dev"
+  PQ_FABRIC_PRODUCTION_MODE: "false"
+  PQFABRIC_SIGNER_PROVIDER: "local"
+  PQFABRIC_ALLOW_LOCAL_SIGNER: "false"
+  PQFABRIC_KMS_KEY_ID: ""
+  PQFABRIC_KMS_ENDPOINT: ""
+  PQFABRIC_KMS_TOKEN: ""
+  PQFABRIC_KMS_CA_FILE: ""
+  PQFABRIC_KMS_ALLOW_INSECURE: "false"
+  PQFABRIC_CONSORTIUM_MANIFEST: ""
+  PQFABRIC_CONSORTIUM_MANIFEST_HISTORY: ""
+  PQFABRIC_DATABASE_URL: ""
+  PQFABRIC_PEER_TLS_CERT_FILE: ""
+  PQFABRIC_PEER_TLS_KEY_FILE: ""
+  PQFABRIC_PEER_TLS_CA_FILE: ""
+  PQFABRIC_OPS_LISTEN_ADDR: ""
+  PQFABRIC_LOG_FORMAT: ""
+  PQFABRIC_OTEL_ENABLED: "false"
+  PQFABRIC_OTEL_SERVICE_NAME: "pq-fabric-validator"
+  PQFABRIC_OTEL_EXPORTER_OTLP_ENDPOINT: ""
+  PQFABRIC_OTEL_EXPORTER_OTLP_HEADERS: ""
+  PQFABRIC_OTEL_EXPORTER_OTLP_INSECURE: "false"
+  STORAGE: "durable"
+  QUORUM_THRESHOLD: "5"
+  THRESHOLD: "5"
+  ROUTING_MODE: "private-testbed"
+  ANCHOR_BACKEND: "mock"
+  PUBLIC_EXIT_ROUTING: "false"
+  PEERS: "validator-1=http://validator-0.validator.pq-fabric.svc.cluster.local:8080,validator-2=http://validator-1.validator.pq-fabric.svc.cluster.local:8080,validator-3=http://validator-2.validator.pq-fabric.svc.cluster.local:8080,validator-4=http://validator-3.validator.pq-fabric.svc.cluster.local:8080,validator-5=http://validator-4.validator.pq-fabric.svc.cluster.local:8080,validator-6=http://validator-5.validator.pq-fabric.svc.cluster.local:8080,validator-7=http://validator-6.validator.pq-fabric.svc.cluster.local:8080"

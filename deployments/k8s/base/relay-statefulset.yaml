@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: relay
+  namespace: pq-fabric
+spec:
+  serviceName: relay
+  replicas: 7
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: relay
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pq-fabric
+        app.kubernetes.io/component: relay
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: relay
+          image: pq-fabric:local
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              ordinal="${HOSTNAME##*-}"
+              relay_num="$((ordinal + 1))"
+              export RELAY_ID="relay-${relay_num}"
+              case "${relay_num}" in
+                1|2) export REGION="nyc" ;;
+                3|4) export REGION="london" ;;
+                *) export REGION="singapore" ;;
+              esac
+              exec /app/relay
+          envFrom:
+            - configMapRef:
+                name: pq-fabric-config
+          env:
+            - name: PORT
+              value: "8080"
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10

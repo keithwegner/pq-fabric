@@ -1,0 +1,8 @@
+project_name     = "pq-fabric"
+environment      = "local-simulation"
+deployment_profile = "local"
+validator_count  = 7
+relay_count      = 7
+quorum_threshold = 5
+container_image  = "pq-fabric:local"
+enable_public_exits = false
