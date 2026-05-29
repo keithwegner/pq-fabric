@@ -56,7 +56,7 @@ git_ref="unavailable: no git metadata"
 git_dirty="unknown"
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git_ref="$(git rev-parse HEAD)"
-  if [[ -n "$(git status --short)" ]]; then
+  if [[ -n "$(git status --short --untracked-files=no)" ]]; then
     git_dirty="true"
   else
     git_dirty="false"
