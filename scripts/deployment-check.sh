@@ -14,13 +14,17 @@ required_paths=(
   deployments/k8s/base/kustomization.yaml
   deployments/k8s/overlays/staging/kustomization.yaml
   deployments/k8s/overlays/production-pilot/kustomization.yaml
+  deployments/k8s/overlays/aws-staging/kustomization.yaml
   deployments/secrets/README.md
   deployments/secrets/external-secret-contract.example.yaml
+  deployments/secrets/aws-staging-external-secret-contract.example.yaml
   config/examples/production-pilot.example.env
+  config/examples/aws-staging.example.env
   config/examples/pilot-bootstrap.example.yaml
   deployments/terraform/main.tf
   docs/deployment-local.md
   docs/deployment-k8s.md
+  docs/deployment-aws-staging.md
   docs/deployment-terraform.md
   docs/operations-runbook.md
 )

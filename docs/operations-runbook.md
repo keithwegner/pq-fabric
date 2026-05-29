@@ -88,6 +88,7 @@ make deployment-evidence
 make pilot-bootstrap-check
 make pilot-backup-check
 make pilot-deploy-check
+make aws-staging-check
 ```
 
 Artifacts are written under `tmp/`. They are generated evidence and are ignored by Git.
@@ -196,6 +197,27 @@ For Kubernetes, the production-pilot overlay uses `PQFABRIC_OPS_LISTEN_ADDR`
 for `/livez` and `/readyz` probes. Internal `/ready`, `/metrics`, consensus,
 and peer endpoints remain on the peer-mTLS validator surface.
 
+## AWS Staging Deployment
+
+Run static local validation with:
+
+```bash
+make aws-staging-check
+```
+
+Live staging is handled only by the manual `aws-staging-deploy` workflow. Use a
+digest from the signed `release-artifacts` workflow, start with `dry_run=true`,
+and review the uploaded render, cosign, and deploy-summary evidence before
+using `dry_run=false`.
+
+The workflow requires GitHub environment `staging-aws`, AWS OIDC role
+configuration, an existing private EKS cluster, External Secrets Operator,
+`ClusterSecretStore/pq-fabric-staging-aws-secret-store`, storage class
+`pq-fabric-staging-gp3-retain`, AWS Secrets Manager entries under
+`pq-fabric/staging/*`, and a reachable HTTPS remote signer endpoint. It does
+not create the EKS cluster, AWS secrets, storage class, signer service, or cloud
+networking.
+
 ## SQLite Backup And Upgrade Checks
 
 Dry-run migrations before a rollout:
@@ -246,6 +268,9 @@ Validator data lives under `data/validator-*` in local Compose. Do not copy or p
   secret reference shape and expected External Secrets store ref before a pilot
   rollout. `make pilot-bootstrap-check` also proves a generated local smoke path
   with temporary material only.
+- `deployments/secrets/aws-staging-external-secret-contract.example.yaml`
+  documents AWS Secrets Manager remote refs for the manual EKS staging workflow.
+  The `ClusterSecretStore` and AWS secrets must be created out of band.
 - `pilot-bootstrap validate` reports redacted `secret_evidence` for expected
   mount paths, resolved/unresolved state, content class, and safe fingerprints
   only for manifests and certificate material. Tokens and private keys are not
@@ -281,6 +306,7 @@ Validator data lives under `data/validator-*` in local Compose. Do not copy or p
 - Bundle and AI context handling remains local/mock only.
 - Polygon anchoring is optional and mock-backed for local validation.
 - Kubernetes and Terraform files are controlled-readiness scaffolding, not a
-  live cluster or cloud deployment.
+  production cluster or cloud deployment. The AWS staging workflow is a manual
+  staging path only.
 
 No part of this runbook claims production BFT safety, production fault tolerance, production anonymity, production post-quantum security, FIPS certification, ACVTS validation, audited smart-contract security, or production deployment readiness.

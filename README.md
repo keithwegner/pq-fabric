@@ -311,7 +311,9 @@ make compose-clean
 
 The deployment path now includes controlled deployment readiness checks for
 `local`, `staging`, and `production-pilot` profiles. It does not deploy to
-cloud, Kubernetes, Polygon, or any public network.
+cloud, Kubernetes, Polygon, or any public network unless the manual AWS staging
+workflow is explicitly dispatched against an already-provisioned private EKS
+cluster.
 
 ```bash
 make deployment-check
@@ -320,6 +322,7 @@ make terraform-validate
 make pilot-bootstrap-check
 make pilot-backup-check
 make pilot-deploy-check
+make aws-staging-check
 make deployment-evidence
 ```
 
@@ -339,6 +342,7 @@ tmp/sqlite-restore-check.json
 tmp/release-provenance.json
 tmp/go-modules.txt
 tmp/sbom.spdx.json # optional, only when syft is installed
+tmp/aws-staging-render.yaml # only from aws-staging-check or workflow
 ```
 
 Local configuration templates live under:
@@ -360,6 +364,14 @@ Terraform scaffolding lives under:
 ```text
 deployments/terraform/
 ```
+
+The AWS staging overlay under `deployments/k8s/overlays/aws-staging` uses
+AWS Secrets Manager through External Secrets references, a signed digest-pinned
+GHCR image, PVC-backed SQLite, relays disabled, peer mTLS mounts, and the
+existing remote `cloud-kms` signer endpoint contract. It is deployed only by the
+manual `aws-staging-deploy` workflow gated by GitHub environment `staging-aws`.
+That path assumes an existing private EKS cluster, External Secrets Operator,
+ClusterSecretStore, storage class, and remote signer endpoint.
 
 The production-pilot Kubernetes overlay uses Secret references, mounted
 manifest/TLS/KMS files, SQLite storage, cloud-KMS signer placeholders, HTTPS
@@ -417,10 +429,14 @@ GitHub Actions are split into three production-path gates:
 - `release-artifacts` builds multi-architecture images, scans them, publishes
   signed artifacts to `ghcr.io/keithwegner/pq-fabric` on `main` and `v*` tags,
   and uploads digest/SBOM/provenance evidence.
+- `aws-staging-deploy` is manual only, requires GitHub environment
+  `staging-aws`, verifies a signed digest image, renders/applies the AWS EKS
+  staging overlay, and uploads smoke evidence when `dry_run=false`.
 
 See `docs/ci-cd.md` and `docs/release-artifacts.md` for the required-check and
 artifact policy. The current CD boundary publishes signed images only; it does
-not apply Kubernetes manifests, run Terraform apply, or deploy cloud resources.
+not run Terraform apply, create cloud resources, or deploy beyond the manual
+AWS staging path.
 
 ## Packaging and handoff
 
@@ -491,6 +507,7 @@ This is prototype durability for local research and restart testing, not product
 - `docs/identity-anchors.md` and `docs/contracts-polygon.md` — anchor interface and contracts.
 - `docs/deployment-local.md` — local Docker Compose workflow.
 - `docs/deployment-k8s.md` — Kubernetes scaffold.
+- `docs/deployment-aws-staging.md` — manual AWS/EKS staging path.
 - `docs/deployment-terraform.md` — Terraform scaffold.
 - `docs/operations-runbook.md` — local operations and evidence workflow.
 - `docs/final-handoff.md` — final evaluator handoff guide.
@@ -556,5 +573,6 @@ tests/crypto_vectors     compact ACVTS-style crypto fixtures
 ## Next engineering steps
 
 1. Human reviewer runs `make final-verify` and inspects `tmp/e2e-evidence.json`.
-2. Human reviewer checks `docs/claim-safety-review.md` before external sharing.
-3. Any future work should be explicitly scoped; this handoff does not imply production deployment readiness.
+2. Human reviewer dry-runs `aws-staging-deploy` with a signed GHCR digest before
+   any staging apply.
+3. Human reviewer checks `docs/claim-safety-review.md` before external sharing.

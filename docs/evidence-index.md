@@ -76,6 +76,26 @@ All evidence is local engineering evidence. It is not certification, production 
 - Does not show: cloud deployment, Kubernetes deployment, Terraform apply, live Polygon, or public network readiness.
 - Failure interpretation: inspect optional tool availability and config rendering errors.
 
+## AWS Staging Evidence
+
+- Generate locally: `make aws-staging-check`
+- Generate in GitHub Actions: run `aws-staging-deploy` manually.
+- Output:
+  - `tmp/aws-staging-render.yaml`
+  - `tmp/aws-staging-cosign-verify.txt`
+  - `tmp/aws-staging-deploy-summary.json`
+  - `tmp/aws-staging-smoke.json`
+  - `tmp/aws-staging-ops-report.json`
+- Shows: AWS staging overlay render, ExternalSecret references, signed digest
+  verification, optional EKS server-side dry-run/apply, readiness, hash-only
+  submit, receipt verification, and ops report evidence.
+- Does not show: EKS cluster creation, AWS secret creation, Terraform apply,
+  public ingress, production deployment, native AWS KMS ML-DSA signing, or
+  certification.
+- Failure interpretation: inspect image signature verification, AWS OIDC
+  environment variables, EKS access, External Secrets readiness, signer
+  endpoint reachability, validator rollout, and receipt verification.
+
 ## Secret And Release Evidence
 
 - Generate: `make pilot-bootstrap-check`, `make release-provenance-check`, and `make release-artifacts-check`

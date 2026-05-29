@@ -50,6 +50,8 @@ seven-validator consortium and hash-only evidence receipts.
 | Unsafe schema upgrade | SQLite schema versioning and `pqfabric migrate-sqlite` provide dry-run and explicit-apply migration checks; startup rejects unsupported future schema versions. |
 | Miswired secret source before rollout | `cmd/pilot-bootstrap validate` checks the provider-neutral secret reference contract, External Secrets store refs, required keys, manifest/API/TLS/KMS content when available, and unresolved status without printing raw secret values. |
 | Release artifact ambiguity | `scripts/release-provenance.sh` records Go/tool versions, module inventory, image reference/digest status, optional SBOM generation, and optional cosign verification with explicit skipped statuses. |
+| Unsigned or mutable image deployed to staging | The manual AWS staging workflow requires a digest-pinned GHCR image and verifies keyless cosign identity before any Kubernetes dry-run or apply. |
+| Staging secret-store drift | The AWS staging overlay uses ExternalSecret references only and the workflow requires the External Secrets CRDs plus `ClusterSecretStore/pq-fabric-staging-aws-secret-store` before rollout. |
 | Shared or wrong validator TLS material | Kubernetes overlays mount per-validator certificate and key files, and the bootstrap smoke issues URI-SAN certificates shaped as `spiffe://<consortium_id>/validator/<validator_id>` before forming a receipt. |
 | Chain/RPC outage | Testnet anchoring is optional; receipt validity does not depend on anchoring. |
 
@@ -62,7 +64,7 @@ The following controls remain required before broad production use:
 - PostgreSQL or managed database support beyond the current SQLite backend.
 - Centralized audit shipping, SIEM integration, managed dashboards, and live
   alert delivery.
-- Real cloud/Kubernetes deployment resources with provider-specific secret-manager integration.
+- Production environment promotion beyond the manual AWS staging path.
 - Formal incident response, managed backup restore, and disaster recovery drills.
 - Independent security review of contracts and validator networking.
 - Load, soak, and partition testing under realistic network conditions.

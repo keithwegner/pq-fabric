@@ -1,0 +1,241 @@
+name: aws-staging-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_ref:
+        description: "Digest-pinned GHCR image reference"
+        required: true
+        type: string
+      namespace:
+        description: "Kubernetes namespace for the staging deployment"
+        required: false
+        default: pq-fabric
+        type: string
+      dry_run:
+        description: "Run server-side dry-run without applying manifests"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: read
+  id-token: write
+  packages: read
+
+concurrency:
+  group: aws-staging-deploy
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+  PQFABRIC_STAGING_API_TOKEN: ${{ secrets.PQFABRIC_STAGING_API_TOKEN }}
+  PQFABRIC_STAGING_ADMIN_TOKEN: ${{ secrets.PQFABRIC_STAGING_ADMIN_TOKEN }}
+
+jobs:
+  deploy:
+    name: deploy signed image to AWS staging
+    runs-on: ubuntu-latest
+    environment: staging-aws
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: sigstore/cosign-installer@v4.1.2
+
+      - uses: aws-actions/configure-aws-credentials@v6.1.2
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install kubectl
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y jq ripgrep
+          version="$(curl -L -s https://dl.k8s.io/release/stable.txt)"
+          curl -L -o kubectl "https://dl.k8s.io/release/${version}/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+          kubectl version --client=true
+          aws --version
+
+      - name: Validate inputs and environment
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          image_ref="${{ inputs.image_ref }}"
+          namespace="${{ inputs.namespace }}"
+          dry_run="${{ inputs.dry_run }}"
+          if [[ ! "${image_ref}" =~ ^ghcr\.io/keithwegner/pq-fabric@sha256:[0-9a-f]{64}$ ]]; then
+            echo "image_ref must be a digest-pinned ghcr.io/keithwegner/pq-fabric@sha256:<64-hex> reference" >&2
+            exit 1
+          fi
+          if [[ ! "${namespace}" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]]; then
+            echo "namespace must be a valid lowercase Kubernetes namespace name" >&2
+            exit 1
+          fi
+          if [[ "${dry_run}" != "true" && "${dry_run}" != "false" ]]; then
+            echo "dry_run must be true or false" >&2
+            exit 1
+          fi
+          for required in AWS_ROLE_ARN AWS_REGION EKS_CLUSTER_NAME; do
+            if [[ -z "${!required:-}" ]]; then
+              echo "${required} GitHub environment variable is required" >&2
+              exit 1
+            fi
+          done
+          if [[ "${dry_run}" == "false" ]]; then
+            for required in PQFABRIC_STAGING_API_TOKEN PQFABRIC_STAGING_ADMIN_TOKEN; do
+              if [[ -z "${!required:-}" ]]; then
+                echo "${required} GitHub environment secret is required for non-dry-run smoke evidence" >&2
+                exit 1
+              fi
+            done
+          fi
+
+      - name: Verify signed image
+        run: |
+          set -euo pipefail
+          image_ref="${{ inputs.image_ref }}"
+          cosign verify \
+            --certificate-identity-regexp "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release-artifacts.yml@refs/(heads/main|tags/v.*)" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "${image_ref}" | tee tmp/aws-staging-cosign-verify.txt
+
+      - name: Configure EKS context
+        run: |
+          set -euo pipefail
+          aws eks update-kubeconfig \
+            --name "${EKS_CLUSTER_NAME}" \
+            --region "${AWS_REGION}" \
+            --alias pq-fabric-aws-staging
+          kubectl config current-context
+          kubectl get crd externalsecrets.external-secrets.io clustersecretstores.external-secrets.io >/dev/null
+          kubectl get clustersecretstore pq-fabric-staging-aws-secret-store >/dev/null
+
+      - name: Render AWS staging manifests
+        run: |
+          set -euo pipefail
+          image_ref="${{ inputs.image_ref }}"
+          namespace="${{ inputs.namespace }}"
+          digest="${image_ref##*@}"
+          rm -rf tmp/aws-staging-kustomize
+          mkdir -p tmp/aws-staging-kustomize
+          cp -R deployments/k8s/base tmp/aws-staging-kustomize/base
+          cp -R deployments/k8s/overlays/aws-staging tmp/aws-staging-kustomize/overlay
+          sed -i 's#../../base#../base#' tmp/aws-staging-kustomize/overlay/kustomization.yaml
+          sed -i "s#digest: sha256:[0-9a-f]\\{64\\}#digest: ${digest}#" tmp/aws-staging-kustomize/overlay/kustomization.yaml
+          kubectl kustomize tmp/aws-staging-kustomize/overlay > tmp/aws-staging-render.yaml
+          if [[ "${namespace}" != "pq-fabric" ]]; then
+            NAMESPACE="${namespace}" perl -0pi -e 's/(kind: Namespace\nmetadata:\n  name: )pq-fabric/$1$ENV{NAMESPACE}/g; s/(namespace: )pq-fabric/$1$ENV{NAMESPACE}/g; s/\.validator\.pq-fabric\.svc\.cluster\.local/.validator.$ENV{NAMESPACE}.svc.cluster.local/g' tmp/aws-staging-render.yaml
+          fi
+          rg -q "${digest}" tmp/aws-staging-render.yaml
+          rg -q "kind: ExternalSecret" tmp/aws-staging-render.yaml
+          rg -q "pq-fabric-staging-aws-secret-store" tmp/aws-staging-render.yaml
+
+      - name: Apply or dry-run AWS staging manifests
+        run: |
+          set -euo pipefail
+          dry_run="${{ inputs.dry_run }}"
+          namespace="${{ inputs.namespace }}"
+          if [[ "${dry_run}" == "true" ]]; then
+            kubectl apply --server-side --dry-run=server -f tmp/aws-staging-render.yaml
+            jq -n \
+              --arg status "pass" \
+              --arg mode "dry-run" \
+              --arg namespace "${namespace}" \
+              --arg image_ref "${{ inputs.image_ref }}" \
+              '{status:$status, mode:$mode, namespace:$namespace, image_ref:$image_ref, smoke:"skipped for dry-run"}' \
+              > tmp/aws-staging-deploy-summary.json
+            exit 0
+          fi
+          kubectl apply -f tmp/aws-staging-render.yaml
+          for name in pq-fabric-api-keys pq-fabric-consortium-manifest pq-fabric-peer-tls pq-fabric-kms pq-fabric-kms-ca; do
+            kubectl -n "${namespace}" wait externalsecret/"${name}" --for=condition=Ready --timeout=5m
+          done
+          kubectl -n "${namespace}" rollout status statefulset/validator --timeout=10m
+
+      - name: Run post-deploy smoke
+        if: inputs.dry_run == 'false'
+        run: |
+          set -euo pipefail
+          namespace="${{ inputs.namespace }}"
+          kubectl -n "${namespace}" port-forward statefulset/validator 18081:8080 18090:8090 >tmp/aws-staging-port-forward.log 2>&1 &
+          pf_pid="$!"
+          cleanup() {
+            kill "${pf_pid}" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:18090/readyz > tmp/aws-staging-readyz.json; then
+              break
+            fi
+            sleep 2
+          done
+          test -s tmp/aws-staging-readyz.json
+          artifact_hash="sha256:$(printf 'pq-fabric aws staging artifact %s' "${GITHUB_SHA}" | sha256sum | awk '{print $1}')"
+          metadata_hash="sha256:$(printf 'pq-fabric aws staging metadata %s' "${GITHUB_RUN_ID}" | sha256sum | awk '{print $1}')"
+          go run ./cmd/pqfabric submit \
+            --url http://127.0.0.1:18081 \
+            --token "${PQFABRIC_STAGING_API_TOKEN}" \
+            --category aws-staging-smoke \
+            --artifact-hash "${artifact_hash}" \
+            --metadata-hash "${metadata_hash}" \
+            --organization staging-ops \
+            --idempotency-key "aws-staging-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            > tmp/aws-staging-submit.json
+          receipt_id="$(jq -r '.receipt_id // .receipt.receipt_id // empty' tmp/aws-staging-submit.json)"
+          evidence_id="$(jq -r '.evidence_id // .receipt.evidence_id // empty' tmp/aws-staging-submit.json)"
+          if [[ -z "${receipt_id}" ]]; then
+            echo "smoke submit did not return a receipt_id" >&2
+            exit 1
+          fi
+          go run ./cmd/pqfabric verify \
+            --url http://127.0.0.1:18081 \
+            --token "${PQFABRIC_STAGING_API_TOKEN}" \
+            --receipt-id "${receipt_id}" \
+            > tmp/aws-staging-smoke.json
+          jq -e '.valid == true' tmp/aws-staging-smoke.json >/dev/null
+          go run ./cmd/pqfabric report \
+            --url http://127.0.0.1:18081 \
+            --token "${PQFABRIC_STAGING_ADMIN_TOKEN}" \
+            --format json \
+            --audit-limit 50 \
+            --receipt-limit 20 \
+            --out tmp/aws-staging-ops-report.json
+          jq -n \
+            --arg status "pass" \
+            --arg mode "apply" \
+            --arg namespace "${namespace}" \
+            --arg image_ref "${{ inputs.image_ref }}" \
+            --arg receipt_id "${receipt_id}" \
+            --arg evidence_id "${evidence_id}" \
+            '{status:$status, mode:$mode, namespace:$namespace, image_ref:$image_ref, receipt_id:$receipt_id, evidence_id:$evidence_id}' \
+            > tmp/aws-staging-deploy-summary.json
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: aws-staging-deployment-evidence
+          if-no-files-found: warn
+          retention-days: 30
+          path: |
+            tmp/aws-staging-render.yaml
+            tmp/aws-staging-cosign-verify.txt
+            tmp/aws-staging-deploy-summary.json
+            tmp/aws-staging-smoke.json
+            tmp/aws-staging-ops-report.json
+            tmp/aws-staging-readyz.json
+            tmp/aws-staging-submit.json
+            tmp/aws-staging-port-forward.log

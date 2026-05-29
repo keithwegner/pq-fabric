@@ -22,12 +22,15 @@ required_docs=(
   docs/release-artifacts.md
   docs/deployment-local.md
   docs/deployment-k8s.md
+  docs/deployment-aws-staging.md
   docs/deployment-terraform.md
   docs/operations-runbook.md
   docs/release-notes.md
   deployments/secrets/README.md
   deployments/secrets/external-secret-contract.example.yaml
+  deployments/secrets/aws-staging-external-secret-contract.example.yaml
   config/examples/production-pilot.example.env
+  config/examples/aws-staging.example.env
   config/examples/pilot-bootstrap.example.yaml
 )
 

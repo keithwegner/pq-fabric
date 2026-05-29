@@ -34,3 +34,10 @@ same target Secret names through provider-neutral ExternalSecret-style
 references and points them at
 `ClusterSecretStore/pq-fabric-production-pilot-secret-store`. It contains
 references only, not secret values.
+
+`deployments/secrets/aws-staging-external-secret-contract.example.yaml` documents
+the AWS staging shape. It points the same target Secret names at
+`ClusterSecretStore/pq-fabric-staging-aws-secret-store` and AWS Secrets Manager
+remote keys under `pq-fabric/staging/*`. The ClusterSecretStore, IAM role,
+External Secrets Operator installation, and actual AWS secrets are created out
+of band.

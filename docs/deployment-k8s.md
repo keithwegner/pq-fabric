@@ -20,6 +20,7 @@ deployments/k8s/overlays/local/
 deployments/k8s/overlays/three-region-simulation/
 deployments/k8s/overlays/staging/
 deployments/k8s/overlays/production-pilot/
+deployments/k8s/overlays/aws-staging/
 deployments/secrets/
 ```
 
@@ -29,14 +30,15 @@ deployments/secrets/
 make k8s-validate
 ```
 
-The target uses `kubectl kustomize` for the base, staging, and
-production-pilot overlays when `kubectl` is installed. It does not require a
+The target uses `kubectl kustomize` for the base, staging, production-pilot,
+and AWS staging overlays when `kubectl` is installed. It does not require a
 live cluster and does not create resources.
 
 Run the broader deployment readiness check with:
 
 ```bash
 make pilot-deploy-check
+make aws-staging-check
 ```
 
 That check validates the local and production-pilot profile contracts, checks
@@ -55,10 +57,15 @@ release provenance.
 - The production-pilot overlay disables relays, requires HTTPS peer URLs,
   mounts API-key, manifest/history, per-validator peer TLS, and KMS CA secrets,
   and uses SQLite under the validator data volume.
-- Staging and production-pilot overlays use a digest-pinned
+- Staging, production-pilot, and AWS staging overlays use a digest-pinned
   `ghcr.io/keithwegner/pq-fabric` placeholder. Replace the placeholder digest
   with the digest emitted by the `release-artifacts` workflow before any real
   pilot rollout.
+- The AWS staging overlay adds ExternalSecret references for
+  `ClusterSecretStore/pq-fabric-staging-aws-secret-store`, expects AWS Secrets
+  Manager remote keys under `pq-fabric/staging/*`, uses storage class
+  `pq-fabric-staging-gp3-retain`, and keeps the remote `cloud-kms` signer
+  endpoint contract rather than native AWS KMS ML-DSA signing.
 - Each validator pod derives `NODE_ID` from its StatefulSet ordinal and uses
   `/etc/pq-fabric/tls/${NODE_ID}.crt` plus `${NODE_ID}.key`; the peer
   certificate must contain URI SAN
@@ -77,6 +84,9 @@ contract lives in `deployments/secrets/README.md` and
 shape is documented in
 `deployments/secrets/external-secret-contract.example.yaml`; it includes the
 expected `ClusterSecretStore` reference and remote keys without secret values.
+AWS staging references are documented in
+`deployments/secrets/aws-staging-external-secret-contract.example.yaml` and
+`docs/deployment-aws-staging.md`.
 `config/examples/pilot-bootstrap.example.yaml` is the bootstrap validation spec.
 `pilot-bootstrap validate` records redacted secret-source evidence for expected
 mount paths, resolved/unresolved state, content class, and safe fingerprints for

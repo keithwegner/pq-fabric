@@ -66,6 +66,8 @@ require_pattern 'ghcr\.io/keithwegner/pq-fabric' deployments/k8s/overlays/stagin
 require_pattern 'sha256:' deployments/k8s/overlays/staging/kustomization.yaml
 require_pattern 'ghcr\.io/keithwegner/pq-fabric' deployments/k8s/overlays/production-pilot/kustomization.yaml
 require_pattern 'sha256:' deployments/k8s/overlays/production-pilot/kustomization.yaml
+require_pattern 'ghcr\.io/keithwegner/pq-fabric' deployments/k8s/overlays/aws-staging/kustomization.yaml
+require_pattern 'sha256:' deployments/k8s/overlays/aws-staging/kustomization.yaml
 require_pattern 'ghcr\.io/keithwegner/pq-fabric@sha256:' deployments/terraform/examples/aws-three-region.tfvars.example
 require_pattern 'release-artifacts / build, scan, sign, and attest' docs/ci-cd.md
 require_pattern 'digest-pinned' docs/release-artifacts.md

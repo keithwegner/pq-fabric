@@ -1,4 +1,4 @@
-.PHONY: verify test demo fault-demo failure-evidence routing-demo routing-evidence routing-tests bundle-tests bundle-demo bundle-evidence contract-tests anchor-tests anchor-demo anchor-evidence validator pqfabric fmt lint-lite crypto-vectors crypto-vectors-mlkem crypto-vectors-mldsa image compose-config compose-up compose-down compose-logs compose-clean deploy-local deploy-local-smoke deployment-check k8s-validate terraform-validate deployment-evidence pilot-bootstrap-check pilot-backup-check pilot-deploy-check release-provenance release-provenance-check release-artifacts-check sqlite-restore-check e2e-demo e2e-evidence docs-check observability-check repo-hygiene final-verify tidy package package-handoff package-evidence
+.PHONY: verify test demo fault-demo failure-evidence routing-demo routing-evidence routing-tests bundle-tests bundle-demo bundle-evidence contract-tests anchor-tests anchor-demo anchor-evidence validator pqfabric fmt lint-lite crypto-vectors crypto-vectors-mlkem crypto-vectors-mldsa image compose-config compose-up compose-down compose-logs compose-clean deploy-local deploy-local-smoke deployment-check k8s-validate terraform-validate deployment-evidence pilot-bootstrap-check pilot-backup-check pilot-deploy-check aws-staging-check release-provenance release-provenance-check release-artifacts-check sqlite-restore-check e2e-demo e2e-evidence docs-check observability-check repo-hygiene final-verify tidy package package-handoff package-evidence
 
 verify: test demo
 
@@ -92,7 +92,7 @@ deployment-check:
 	./scripts/deployment-check.sh
 
 k8s-validate:
-	@if command -v kubectl >/dev/null 2>&1; then kubectl kustomize deployments/k8s/base >/dev/null; kubectl kustomize deployments/k8s/overlays/staging >/dev/null; kubectl kustomize deployments/k8s/overlays/production-pilot >/dev/null; else echo "kubectl not installed; skipping Kubernetes manifest validation"; fi
+	@if command -v kubectl >/dev/null 2>&1; then kubectl kustomize deployments/k8s/base >/dev/null; kubectl kustomize deployments/k8s/overlays/staging >/dev/null; kubectl kustomize deployments/k8s/overlays/production-pilot >/dev/null; kubectl kustomize deployments/k8s/overlays/aws-staging >/dev/null; else echo "kubectl not installed; skipping Kubernetes manifest validation"; fi
 
 terraform-validate:
 	@if command -v terraform >/dev/null 2>&1; then terraform -chdir=deployments/terraform init -backend=false && terraform -chdir=deployments/terraform validate; rm -rf deployments/terraform/.terraform; else echo "terraform not installed; skipping Terraform validation"; fi
@@ -115,6 +115,9 @@ pilot-backup-check:
 
 pilot-deploy-check:
 	./scripts/pilot-deploy-check.sh
+
+aws-staging-check:
+	./scripts/aws-staging-check.sh
 
 release-provenance:
 	./scripts/release-provenance.sh
@@ -170,6 +173,7 @@ final-verify:
 	$(MAKE) release-provenance-check
 	$(MAKE) release-artifacts-check
 	$(MAKE) pilot-deploy-check
+	$(MAKE) aws-staging-check
 	$(MAKE) repo-hygiene
 	$(MAKE) k8s-validate
 	$(MAKE) terraform-validate

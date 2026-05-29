@@ -5,7 +5,8 @@ intended to catch regressions, security issues, and deployment-evidence drift
 before code reaches `main`. They do not deploy cloud resources, run Terraform
 apply, fetch real secrets, or enable public/mainnet services. Image publishing
 is limited to signed GHCR artifacts from the `release-artifacts` workflow on
-`main` and `v*` tags.
+`main` and `v*` tags. The only cluster-deploy workflow is the manual,
+environment-gated AWS staging workflow.
 
 ## Workflows
 
@@ -20,9 +21,13 @@ is limited to signed GHCR artifacts from the `release-artifacts` workflow on
   publishes to `ghcr.io/keithwegner/pq-fabric` on `main` and `v*` tags, signs
   published images with keyless cosign, emits provenance, and uploads release
   evidence artifacts.
+- `aws-staging-deploy`: manual `workflow_dispatch` only; requires GitHub
+  environment `staging-aws`, AWS OIDC, a digest-pinned signed GHCR image, an
+  existing private EKS cluster, External Secrets, and a dry-run/apply choice.
 
-All workflows support `workflow_dispatch`, run on PRs and pushes to `main`, and
-also run on a weekly schedule to catch toolchain or advisory drift.
+The first four workflows support PRs and pushes to `main`; `ci`,
+`production-readiness`, and `security` also run on a weekly schedule.
+`aws-staging-deploy` never runs automatically.
 
 ## Required Checks
 
@@ -50,5 +55,5 @@ owner policy setting, not a product-runtime control.
 ## Release Boundary
 
 The current CD path publishes signed container artifacts but intentionally stops
-before cloud deployment, Kubernetes apply, Terraform apply, Polygon mainnet, or
-certification claims.
+before production cloud deployment, Terraform apply, Polygon mainnet, or
+certification claims. AWS staging apply is a manual pilot-runtime path only.
