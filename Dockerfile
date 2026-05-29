@@ -23,6 +23,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/healthc
 FROM debian:bookworm-slim
 
 WORKDIR /app
+RUN apt-get update \
+  && apt-get upgrade -y \
+  && rm -rf /var/lib/apt/lists/*
 RUN groupadd -r pqfabric && useradd -r -g pqfabric -d /app -s /usr/sbin/nologin pqfabric
 COPY --from=build /out/ /app/
 RUN mkdir -p /data /app/tmp && chown -R pqfabric:pqfabric /data /app/tmp
