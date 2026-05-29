@@ -40,6 +40,13 @@ Before treating `main` as production-path ready, require these checks to pass:
 
 Branch protection for `main` should require those checks before merge.
 
+## Branch Protection
+
+`main` branch protection is configured to require the checks above with strict
+up-to-date status checks before merge. The rule also requires linear history and
+disables force pushes and branch deletion. Admin enforcement remains a repository
+owner policy setting, not a product-runtime control.
+
 ## Release Boundary
 
 The current CD path publishes signed container artifacts but intentionally stops
