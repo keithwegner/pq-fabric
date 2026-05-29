@@ -29,7 +29,9 @@ require_file docs/release-artifacts.md
 require_file docs/deployment-k8s.md
 require_file docs/deployment-terraform.md
 
-require_pattern '^FROM golang:1\.25-bookworm AS build$' Dockerfile
+require_pattern '^FROM --platform=\$BUILDPLATFORM golang:1\.25-bookworm AS build$' Dockerfile
+require_pattern '^ARG TARGETOS=linux$' Dockerfile
+require_pattern '^ARG TARGETARCH$' Dockerfile
 
 release_workflow=.github/workflows/release-artifacts.yml
 require_pattern 'ghcr\.io' "$release_workflow"
